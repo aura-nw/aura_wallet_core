@@ -3,15 +3,15 @@ import 'package:aura_wallet_core/aura_wallet_core.dart';
 import 'package:aura_wallet_core/wallet_objects.dart';
 import 'package:flutter/material.dart';
 
-import 'src/internal_wallet/inapp_wallet_page.dart';
-import 'src/internal_wallet/wallet_details/check_aura_balance.dart';
-import 'src/internal_wallet/wallet_details/create_hd_wallet.dart';
-import 'src/internal_wallet/wallet_details/make_a_transaction.dart';
-import 'src/internal_wallet/wallet_details/make_query_smart_contract.dart';
-import 'src/internal_wallet/wallet_details/make_write_smart_contract.dart';
-import 'src/internal_wallet/wallet_details/restore_hd_wallet.dart';
-import 'src/internal_wallet/wallet_details/transaction_history.dart';
-import 'src/internal_wallet/wallet_details/wallet_detail_screen.dart';
+import 'src/pages/inapp_wallet_page.dart';
+import 'src/pages/wallet_details/check_aura_balance.dart';
+import 'src/pages/wallet_details/create_hd_wallet.dart';
+import 'src/pages/wallet_details/make_a_transaction.dart';
+import 'src/pages/wallet_details/make_query_smart_contract.dart';
+import 'src/pages/wallet_details/make_write_smart_contract.dart';
+import 'src/pages/wallet_details/restore_hd_wallet.dart';
+import 'src/pages/wallet_details/transaction_history.dart';
+import 'src/pages/wallet_details/wallet_detail_screen.dart';
 
 void main() {
   runApp(const MyApp());
