@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:alan/alan.dart';
 import 'package:alan/proto/cosmos/bank/v1beta1/export.dart';
 import 'package:alan/proto/cosmos/bank/v1beta1/export.dart' as bank;
 import 'package:alan/proto/cosmwasm/wasm/v1/export.dart' as cosMWasm;
@@ -7,10 +8,14 @@ import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
 
 import 'package:flutter/services.dart';
 import 'package:hex/hex.dart';
-import 'package:mobile_wallet_core/mobile_wallet_core.dart';
+import '../aura_wallet_core.dart';
+import 'core/exceptions/aura_internal_exception.dart';
+import 'core/type_data/aura_type_data.dart';
 import 'core/utils/aura_inapp_wallet_helper.dart';
 import 'core/utils/aura_internal_storage.dart';
 import 'core/utils/grpc_logger.dart';
+import 'entities/aura_wallet.dart';
+import 'env/env.dart';
 
 class AuraWalletCoreImpl implements AuraWalletCore {
   final AuraWalletCoreEnvironment environment;
@@ -133,6 +138,11 @@ class AuraWalletCoreImpl implements AuraWalletCore {
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
       throw AuraInternalError(3, message);
     }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
   }
 }
 

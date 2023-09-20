@@ -4,7 +4,8 @@ import 'package:alan/alan.dart';
 import 'package:alan/proto/tendermint/abci/types.pb.dart';
 import 'package:protobuf/protobuf.dart' as proto;
 
-import '../../../mobile_wallet_core.dart';
+import '../../env/env.dart';
+import '../type_data/aura_type_data.dart';
 
 class AuraInAppWalletHelper {
   static List<AuraTransaction> convertToAuraTransaction(
