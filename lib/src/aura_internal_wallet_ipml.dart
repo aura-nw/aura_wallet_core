@@ -67,8 +67,16 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     List<String> mnemonic2 = Bip39.generateMnemonic(strength: 256);
     final Wallet wallet = Wallet.derive(mnemonic2, networkInfo);
 
+    print('wallet bech32Address = ${wallet.bech32Address}');
+
+    await AuraInternalStorage().saveBech32Address(wallet.bech32Address);
+
+    print("run cteate 1");
+
     await AuraInternalStorage()
-        .saveAuraMnemonicOrPrivateKey(mnemonic2.join(' '));
+        .saveAuraMnemonicOrPrivateKey(wallet.bech32Address,mnemonic2.join(' '));
+
+    print('create done');
 
     return AuraFullInfoAuraWalletImpl(
       auraWallet: AuraWalletImpl(
@@ -95,11 +103,12 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         throw AuraInternalError(1, 'key is not valid');
       }
 
-      if (isNeedSave) {
-        await AuraInternalStorage().saveAuraMnemonicOrPrivateKey(key);
-      }
-
       final wallet = Wallet.import(networkInfo, data);
+
+      if (isNeedSave) {
+        await AuraInternalStorage().saveBech32Address(wallet.bech32Address);
+        await AuraInternalStorage().saveAuraMnemonicOrPrivateKey(wallet.bech32Address,key);
+      }
 
       return AuraWalletImpl(
         wallet: wallet,
@@ -110,7 +119,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
       final wallet = Wallet.derive(key.split(' '), networkInfo);
 
       if (isNeedSave) {
-        await AuraInternalStorage().saveAuraMnemonicOrPrivateKey(key);
+        await AuraInternalStorage().saveAuraMnemonicOrPrivateKey(wallet.bech32Address,key);
       }
 
       return AuraWalletImpl(
@@ -121,9 +130,11 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   }
 
   @override
-  Future<AuraWallet?> loadCurrentWallet() async {
+  Future<AuraWallet?> loadCurrentWallet(String bech32Address) async {
     try {
-      String? key = await AuraInternalStorage().readPrivateKey();
+      String? key = await AuraInternalStorage().readPrivateKey(bech32Address);
+
+      print(key);
 
       if (key == null) {
         return null;
@@ -138,11 +149,6 @@ class AuraWalletCoreImpl implements AuraWalletCore {
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
       throw AuraInternalError(3, message);
     }
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
   }
 }
 
@@ -357,9 +363,9 @@ class AuraWalletImpl extends AuraWallet {
   }
 
   @override
-  Future<String?> getCurrentMnemonicOrPrivateKey() async {
+  Future<String?> getCurrentMnemonicOrPrivateKey(String bech32Address) async {
     try {
-      return AuraInternalStorage().readPrivateKey();
+      return AuraInternalStorage().readPrivateKey(bech32Address);
     } catch (e) {
       String message =
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
@@ -447,9 +453,14 @@ class AuraWalletImpl extends AuraWallet {
   }
 
   @override
-  Future<bool> removeCurrentWallet() async {
+  Future<bool> removeCurrentWallet(String bech32Address) async {
     try {
-      await AuraInternalStorage().removePrivateKey();
+      print('run 1');
+      await AuraInternalStorage().removeBech32Address();
+      print('run 2');
+      await AuraInternalStorage().removePrivateKey(bech32Address);
+
+      print('run 3');
 
       return true;
     } catch (e) {

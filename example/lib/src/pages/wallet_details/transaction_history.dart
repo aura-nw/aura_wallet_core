@@ -1,10 +1,9 @@
 import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 
 class TransactionHistory extends StatefulWidget {
-  final AuraWallet auraWallet;
-
-  const TransactionHistory({required this.auraWallet, super.key});
+  const TransactionHistory({super.key});
 
   @override
   State<TransactionHistory> createState() => _TransactionHistoryState();
@@ -14,6 +13,8 @@ class _TransactionHistoryState extends State<TransactionHistory> {
   List<AuraTransaction> listData = [];
 
   String? errorMsg;
+
+  final InAppWalletProviderHandler handler = InAppWalletProviderHandler.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +54,9 @@ class _TransactionHistoryState extends State<TransactionHistory> {
 
   Future<void> doLoadHistory() async {
     try {
+      final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
       final List<AuraTransaction> list =
-          await widget.auraWallet.checkWalletHistory();
+          await currentWallet!.checkWalletHistory();
       setState(() {
         listData = list;
       });

@@ -9,8 +9,11 @@ import 'src/env/env.dart';
 abstract class AuraWalletCore {
   factory AuraWalletCore.create(
       {required AuraWalletCoreEnvironment environment}) {
-    return AuraWalletCoreImpl(environment: environment);
+    return _instance(environment);
   }
+
+  static AuraWalletCore _instance(AuraWalletCoreEnvironment environment) =>
+      AuraWalletCoreImpl(environment: environment);
 
   ///
   /// Create new random HDWallet
@@ -27,7 +30,5 @@ abstract class AuraWalletCore {
   ///
   /// Load current HDWallet from keychain or keystore
   ///
-  Future<AuraWallet?> loadCurrentWallet();
-
-  void dispose() {}
+  Future<AuraWallet?> loadCurrentWallet(String bech32Address);
 }

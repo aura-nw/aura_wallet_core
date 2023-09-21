@@ -1,15 +1,11 @@
 import 'dart:convert';
-
-import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/loading_screen_mixin.dart';
 
 class MakeQuerySmartContract extends StatefulWidget {
-  final AuraWallet auraWallet;
-
-  const MakeQuerySmartContract({required this.auraWallet, Key? key})
-      : super(key: key);
+  const MakeQuerySmartContract({Key? key}) : super(key: key);
 
   @override
   State<MakeQuerySmartContract> createState() => _MakeQuerySmartContractState();
@@ -25,13 +21,15 @@ class _MakeQuerySmartContractState extends State<MakeQuerySmartContract>
   static const String contractAddress =
       'aura1h3kn034nh4p8gwnuqya80rdhyvg3h775ukwul49qsugzk7v3qprs2nhgzh';
 
+  final InAppWalletProviderHandler handler =
+      InAppWalletProviderHandler.instance;
+
   @override
   void initState() {
     super.initState();
     _contractAddressController.text = contractAddress;
     _queryTriggerController.text = 'balance';
-    _parameterController.text =
-        '{"address": "${widget.auraWallet.wallet.bech32Address}"}';
+    _parameterController.text = '{"address": "${handler.bech32Address}"}';
   }
 
   @override
@@ -54,8 +52,7 @@ class _MakeQuerySmartContractState extends State<MakeQuerySmartContract>
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                        'Wallet Address: ${widget.auraWallet.wallet.bech32Address}'),
+                    child: Text('Wallet Address: ${handler.bech32Address}'),
                   ),
                 ],
               ),
@@ -102,7 +99,10 @@ class _MakeQuerySmartContractState extends State<MakeQuerySmartContract>
                     _queryTriggerController.text.trim(): param,
                   };
 
-                  await widget.auraWallet
+                  final currentWallet = await handler
+                      .getWalletCore()
+                      .loadCurrentWallet(handler.bech32Address);
+                  await currentWallet!
                       .makeInteractiveQuerySmartContract(
                         contractAddress: contractAddress,
                         query: query,

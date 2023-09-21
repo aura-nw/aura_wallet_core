@@ -1,5 +1,4 @@
-import 'package:aura_wallet_core/aura_environment.dart';
-import 'package:aura_wallet_core/aura_wallet_core.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +15,9 @@ class _RestoreHdWalletPageState extends State<RestoreHdWalletPage>
     with ScreenLoaderMixin {
   TextEditingController passpharseController = TextEditingController();
   String? errorMsg;
+
+  final InAppWalletProviderHandler handler =
+      InAppWalletProviderHandler.instance;
 
   @override
   Widget builder(BuildContext context) {
@@ -55,12 +57,13 @@ class _RestoreHdWalletPageState extends State<RestoreHdWalletPage>
 
   void doRestoreWallet() async {
     try {
-      await AuraWalletCore.create(
-              environment: AuraWalletCoreEnvironment.testNet)
+      await handler
+          .getWalletCore()
           .restoreHDWallet(
-        key: passpharseController.text,
-      )
+            key: passpharseController.text,
+          )
           .then((wallet) {
+        handler.setBech32Address(wallet.wallet.bech32Address);
         showDialog(
           context: context,
           builder: (context) {
@@ -103,7 +106,6 @@ class _RestoreHdWalletPageState extends State<RestoreHdWalletPage>
                       Navigator.pushNamed(
                         context,
                         '/wallet_detail',
-                        arguments: wallet,
                       );
                     },
                     child: const Text('OK'),

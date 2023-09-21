@@ -33,22 +33,63 @@ class AuraInternalStorage {
     return _internalStorage!;
   }
 
-  Future<void> saveAuraMnemonicOrPrivateKey(String privateKey) async {
+  final IOSOptions _getNonSecureIosOptions = const IOSOptions();
+  final AndroidOptions _getNonSecureAndroidOptions = const AndroidOptions(
+    encryptedSharedPreferences: true,
+    preferencesKeyPrefix: 'aura_sdk_prefix_non_secure',
+    sharedPreferencesName: 'aura_sdk_non_secure',
+  );
+
+  Future<void> saveAuraMnemonicOrPrivateKey(
+      String address, String privateKey) async {
     return _storage.write(
-      key: 'privateKey',
+      key: address,
       value: privateKey,
     );
   }
 
-  Future<String?> readPrivateKey() async {
-    return _storage.read(key: 'privateKey');
+  Future<String?> readPrivateKey(String address) async {
+    return _storage.read(key: address);
   }
 
-  Future<bool> checkExistsPrivateKey() async {
-    return _storage.containsKey(key: 'privateKey');
+  Future<bool> checkExistsPrivateKey(String address) async {
+    return _storage.containsKey(key: address);
   }
 
-  Future<void> removePrivateKey() async {
-    return _storage.delete(key: 'privateKey');
+  Future<void> removePrivateKey(String address) async {
+    return _storage.delete(key: address);
+  }
+
+  Future<void> saveBech32Address(String bech32Address) async {
+    return _storage.write(
+      key: 'bech32Address',
+      value: bech32Address,
+      iOptions: _getNonSecureIosOptions,
+      aOptions: _getNonSecureAndroidOptions,
+    );
+  }
+
+  Future<String?> readBech32Address() async {
+    return _storage.read(
+      key: 'bech32Address',
+      iOptions: _getNonSecureIosOptions,
+      aOptions: _getNonSecureAndroidOptions,
+    );
+  }
+
+  Future<bool> checkExistsBech32Android() async {
+    return _storage.containsKey(
+      key: 'bech32Address',
+      iOptions: _getNonSecureIosOptions,
+      aOptions: _getNonSecureAndroidOptions,
+    );
+  }
+
+  Future<void> removeBech32Address() async {
+    return _storage.delete(
+      key: 'bech32Address',
+      iOptions: _getNonSecureIosOptions,
+      aOptions: _getNonSecureAndroidOptions,
+    );
   }
 }

@@ -1,14 +1,11 @@
 import 'dart:convert';
-
-import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/loading_screen_mixin.dart';
 
 class MakeWriteSmartContract extends StatefulWidget {
-  final AuraWallet auraWallet;
-  const MakeWriteSmartContract({required this.auraWallet, Key? key})
-      : super(key: key);
+  const MakeWriteSmartContract({Key? key}) : super(key: key);
 
   @override
   State<MakeWriteSmartContract> createState() => _MakeWriteSmartContractState();
@@ -25,6 +22,8 @@ class _MakeWriteSmartContractState extends State<MakeWriteSmartContract>
       'aura1h3kn034nh4p8gwnuqya80rdhyvg3h775ukwul49qsugzk7v3qprs2nhgzh';
 
   String hash = '';
+
+  final InAppWalletProviderHandler handler = InAppWalletProviderHandler.instance;
 
   @override
   void initState() {
@@ -51,7 +50,7 @@ class _MakeWriteSmartContractState extends State<MakeWriteSmartContract>
           ),
           child: Column(
             children: [
-              Text('Wallet Address: ${widget.auraWallet.wallet.bech32Address}'),
+              Text('Wallet Address: ${handler.bech32Address}'),
               const SizedBox(
                 height: 20,
               ),
@@ -96,8 +95,9 @@ class _MakeWriteSmartContractState extends State<MakeWriteSmartContract>
                   };
 
                   print(executeMessage);
+                  final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
 
-                  await widget.auraWallet.makeInteractiveWriteSmartContract(
+                  await currentWallet!.makeInteractiveWriteSmartContract(
                     contractAddress: contractAddress,
                     executeMessage: executeMessage,
                     funds: [
@@ -145,7 +145,8 @@ class _MakeWriteSmartContractState extends State<MakeWriteSmartContract>
                 onPressed: () async {
                   showLoading();
                   try {
-                    await widget.auraWallet
+                    final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
+                    await currentWallet!
                         .verifyTxHash(txHash: hash)
                         .then((isSuccess) {
                       showDialog(
@@ -165,19 +166,21 @@ class _MakeWriteSmartContractState extends State<MakeWriteSmartContract>
                       );
                     });
                   } catch (e) {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return Dialog(
-                          child: SizedBox(
-                            height: 100,
-                            child: Center(
-                              child: Text(e.toString()),
+                    if(context.mounted){
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return Dialog(
+                            child: SizedBox(
+                              height: 100,
+                              child: Center(
+                                child: Text(e.toString()),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
+                          );
+                        },
+                      );
+                    }
                   } finally {
                     hideLoading();
                   }

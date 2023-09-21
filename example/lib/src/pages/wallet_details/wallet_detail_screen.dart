@@ -1,11 +1,19 @@
-import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 
-class WalletDetailScreen extends StatelessWidget {
-  final AuraWallet auraWallet;
+class WalletDetailScreen extends StatefulWidget {
+  const WalletDetailScreen({Key? key}) : super(key: key);
 
-  const WalletDetailScreen({required this.auraWallet, Key? key})
-      : super(key: key);
+  @override
+  State<WalletDetailScreen> createState() => _WalletDetailScreenState();
+}
+
+class _WalletDetailScreenState extends State<WalletDetailScreen> {
+  @override
+  void initState() {
+    InAppWalletProviderHandler.instance.checkValidBech32Address();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +35,7 @@ class WalletDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              auraWallet.wallet.bech32Address,
+              InAppWalletProviderHandler.instance.bech32Address,
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 40),
@@ -36,7 +44,6 @@ class WalletDetailScreen extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed(
                   '/check-hd-wallet-balance',
-                  arguments: auraWallet,
                 ),
                 child: const Text('Check balance'),
               ),
@@ -46,7 +53,6 @@ class WalletDetailScreen extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed(
                   '/make-transaction',
-                  arguments: auraWallet,
                 ),
                 child: const Text('Make transaction'),
               ),
@@ -56,7 +62,6 @@ class WalletDetailScreen extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed(
                   '/transaction-history',
-                  arguments: auraWallet,
                 ),
                 child: const Text('Transaction History'),
               ),
@@ -66,7 +71,6 @@ class WalletDetailScreen extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed(
                   '/make-query-smart_contract',
-                  arguments: auraWallet,
                 ),
                 child: const Text('Query Smart Contract'),
               ),
@@ -76,7 +80,6 @@ class WalletDetailScreen extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () => Navigator.of(context).pushNamed(
                   '/make-write-smart_contract',
-                  arguments: auraWallet,
                 ),
                 child: const Text('Write Smart Contract'),
               ),
@@ -85,8 +88,7 @@ class WalletDetailScreen extends StatelessWidget {
               width: 200,
               child: OutlinedButton(
                 onPressed: () async {
-                  await auraWallet.removeCurrentWallet();
-                  Navigator.popUntil(context, ModalRoute.withName('/'));
+                  InAppWalletProviderHandler.instance.setBech32Address('');
                 },
                 child: const Text('Remove current wallet'),
               ),

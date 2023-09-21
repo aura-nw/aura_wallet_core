@@ -1,6 +1,3 @@
-import 'package:aura_wallet_core/aura_environment.dart';
-import 'package:aura_wallet_core/aura_wallet_core.dart';
-import 'package:aura_wallet_core/wallet_objects.dart';
 import 'package:flutter/material.dart';
 
 import 'src/pages/inapp_wallet_page.dart';
@@ -25,23 +22,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // final AuraConnectSdk _connectSdk = AuraConnectSdk();
-  late final AuraWalletCore auraSDK;
-
-  @override
-  void initState() {
-    auraSDK =
-        AuraWalletCore.create(environment: AuraWalletCoreEnvironment.testNet);
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    auraSDK.dispose();
-    super.dispose();
-  }
-
   MaterialPageRoute _defaultRouter(Widget child, RouteSettings settings) =>
       MaterialPageRoute(
         builder: (context) {
@@ -63,11 +43,8 @@ class _MyAppState extends State<MyApp> {
             return _defaultRouter(
                 const InAppWalletPage(title: 'Digital Wallet Demo'), settings);
           case '/wallet_detail':
-            final auraWallet = settings.arguments as AuraWallet;
             return _defaultRouter(
-              WalletDetailScreen(
-                auraWallet: auraWallet,
-              ),
+              const WalletDetailScreen(),
               settings,
             );
           case '/generate-hd-wallet':
@@ -75,86 +52,20 @@ class _MyAppState extends State<MyApp> {
           case '/restore-hd-wallet':
             return _defaultRouter(const RestoreHdWalletPage(), settings);
           case '/transaction-history':
-            final auraWallet = settings.arguments as AuraWallet;
-            return _defaultRouter(
-                TransactionHistory(
-                  auraWallet: auraWallet,
-                ),
-                settings);
+            return _defaultRouter(const TransactionHistory(), settings);
           case '/check-hd-wallet-balance':
-            final auraWallet = settings.arguments as AuraWallet;
-            return _defaultRouter(
-                CheckHDWalletBalance(
-                  auraWallet: auraWallet,
-                ),
-                settings);
+            return _defaultRouter(const CheckHDWalletBalance(), settings);
           case '/make-transaction':
-            final auraWallet = settings.arguments as AuraWallet;
-            return _defaultRouter(
-                MakeTransactionPage(
-                  auraWallet: auraWallet,
-                ),
-                settings);
+            return _defaultRouter(const MakeTransactionPage(), settings);
           case '/make-query-smart_contract':
-            final auraWallet = settings.arguments as AuraWallet;
-            return _defaultRouter(
-                MakeQuerySmartContract(
-                  auraWallet: auraWallet,
-                ),
-                settings);
+            return _defaultRouter(const MakeQuerySmartContract(), settings);
           case '/make-write-smart_contract':
-            final auraWallet = settings.arguments as AuraWallet;
+            return _defaultRouter(const MakeWriteSmartContract(), settings);
+          default:
             return _defaultRouter(
-                MakeWriteSmartContract(
-                  auraWallet: auraWallet,
-                ),
-                settings);
+                const InAppWalletPage(title: 'Digital Wallet Demo'), settings);
         }
       },
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  // AuraWalletInfoData? data;
-
-  bool isLoading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Plugin example app'),
-      ),
-      body: SizedBox(
-        width: 400,
-        height: 800,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pushNamed('/inapp-wallet');
-              },
-              child: const Text('In App wallet'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/external-wallet');
-              },
-              child: const Text('External wallet'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

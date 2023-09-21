@@ -66,9 +66,9 @@ abstract class AuraWallet {
   ///
   /// Return mnemonic of user
   ///
-  Future<String?> getCurrentMnemonicOrPrivateKey();
+  Future<String?> getCurrentMnemonicOrPrivateKey(String bech32Address);
 
-  Future<bool> removeCurrentWallet();
+  Future<bool> removeCurrentWallet(String bech32Address);
 }
 
 abstract class AuraFullInfoWallet {

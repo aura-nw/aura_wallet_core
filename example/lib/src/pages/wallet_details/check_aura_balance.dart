@@ -1,10 +1,9 @@
-import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CheckHDWalletBalance extends StatefulWidget {
-  final AuraWallet auraWallet;
-  const CheckHDWalletBalance({required this.auraWallet, super.key});
+  const CheckHDWalletBalance({super.key});
 
   @override
   State<CheckHDWalletBalance> createState() => _CheckHDWalletBalanceState();
@@ -13,6 +12,8 @@ class CheckHDWalletBalance extends StatefulWidget {
 class _CheckHDWalletBalanceState extends State<CheckHDWalletBalance> {
   String walletBalance = '';
   String? errorMsg;
+
+  final InAppWalletProviderHandler handler = InAppWalletProviderHandler.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +63,8 @@ class _CheckHDWalletBalanceState extends State<CheckHDWalletBalance> {
   void doCheck() async {
     errorMsg = null;
     try {
-      final String balance = await widget.auraWallet.checkWalletBalance();
+      final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
+      final String balance = await currentWallet?.checkWalletBalance() ?? '';
       setState(() {
         walletBalance = balance;
       });

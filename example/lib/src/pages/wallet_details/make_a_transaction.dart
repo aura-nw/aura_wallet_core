@@ -1,4 +1,4 @@
-import 'package:aura_wallet_core/wallet_objects.dart';
+import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,9 +7,7 @@ import '../widgets/make_a_transaction/wallet_from_widget.dart';
 import '../widgets/make_a_transaction/wallet_to_widget.dart';
 
 class MakeTransactionPage extends StatefulWidget {
-  final AuraWallet auraWallet;
-
-  const MakeTransactionPage({required this.auraWallet, super.key});
+  const MakeTransactionPage({super.key});
 
   @override
   State<MakeTransactionPage> createState() => _MakeTransactionPageState();
@@ -17,9 +15,11 @@ class MakeTransactionPage extends StatefulWidget {
 
 class _MakeTransactionPageState extends State<MakeTransactionPage>
     with ScreenLoaderMixin {
-  String address = '';
   double amount = 0;
   String? errorMsg = "";
+
+  final InAppWalletProviderHandler handler =
+      InAppWalletProviderHandler.instance;
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _MakeTransactionPageState extends State<MakeTransactionPage>
               child: Text('Make Transaction HD Wallet'),
             ),
             errorMsg == null
-                ? TransactionFromWidget(address: address, amount: amount)
+                ? TransactionFromWidget(address: handler.bech32Address, amount: amount)
                 : Container(
                     margin: const EdgeInsets.only(top: 32),
                     height: 50,
@@ -57,7 +57,7 @@ class _MakeTransactionPageState extends State<MakeTransactionPage>
                         child: const Text('Get Info'))),
             if (errorMsg == null)
               TransactionToWidget(
-                address: address,
+                address: handler.bech32Address,
                 amount: amount,
                 controller: controller,
               ),
@@ -81,10 +81,10 @@ class _MakeTransactionPageState extends State<MakeTransactionPage>
     showLoading();
     errorMsg = null;
     try {
-      final String amountStr = await widget.auraWallet.checkWalletBalance();
+      final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
+      final String amountStr = await currentWallet?.checkWalletBalance() ?? '';
       double? amountData = double.tryParse(amountStr);
       setState(() {
-        address = widget.auraWallet.wallet.bech32Address;
         amount = amountData ?? 0;
       });
     } catch (e) {
@@ -96,25 +96,31 @@ class _MakeTransactionPageState extends State<MakeTransactionPage>
 
   void doSend() async {
     showLoading();
-    String toAddress = controller.textEditingController.text;
-    int amount = (controller.amount * 1000000).toInt();
+    try{
+      String toAddress = controller.textEditingController.text;
+      int amount = (controller.amount * 1000000).toInt();
 
-    final tx = await widget.auraWallet.makeTransaction(
-        toAddress: toAddress, amount: amount.toString(), fee: '200');
+      final currentWallet = await handler.getWalletCore().loadCurrentWallet(handler.bech32Address);
 
-    final response = await widget.auraWallet.submitTransaction(
-      signedTransaction: tx,
-    );
+      final tx = await currentWallet!.makeTransaction(
+          toAddress: toAddress, amount: amount.toString(), fee: '200');
 
-    if (response) {
-      print("success");
-    } else {
-      print("fail");
+      final response = await currentWallet.submitTransaction(
+        signedTransaction: tx,
+      );
+
+      if (response) {
+        print("success");
+      } else {
+        print("fail");
+      }
+    }catch(e){
+      errorMsg = e.toString();
     }
     hideLoading();
   }
 
   void copyAddress() async {
-    await Clipboard.setData(ClipboardData(text: address));
+    await Clipboard.setData(ClipboardData(text: handler.bech32Address));
   }
 }
