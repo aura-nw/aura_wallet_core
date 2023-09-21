@@ -1,39 +1,144 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# aura_sdk
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+## Description
+A Flutter plugin support dApp connect to Aura from Coin98 Wallet.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
+## Installation
+Add [install](https://github.com/aura-nw/aura-mobile-sdk) to your pubspec.yaml
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+Example
 
-## Features
+```yaml
+    aura_sdk 1.0.0
+```
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+## Step by step
 
-## Getting started
+### 1. Init a AuraConnect SDK:
+``` dart
+  AuraSDK auraSDK = AuraSDK.init(
+        environment: AuraWalletEnvironment.testNet,
+        "DApp Name",
+        "DApp Logo",
+        "app://open.my.app");
+```
+ callBackUrl is the link that the wallet will open after user approved the connection
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+### 2. External Wallet
+
+##### 1. Call the function sdk.connectWallet() to open connection with the Wallet
+``` dart
+	AuraWalletConnectionResult result = await auraSDK.externalWallet.connectWallet();
+```
+ AuraWalletConnectionResult  is the result of the connection, you have to storage the result.idConnection to use for "transfer fuction" later
+ 
+ 
+##### 3. After the **connectWallet()** has been called, the SDK will open the Wallet, and send a request for connect. We have some note on this step:
+- The Wallet MUST init the Aura Chain ( Mainnet or Testnet )
+- If you use the iOS, the trigger "Approved" will automatic open the callBackUrl, but if you use the Android devices, the callBackUrl may not called, you have to open your DApp manual ** (This is a known issuse, we are working on this to fix)**
+
+
+##### 4. Now, the connection is ready, you can work with the Wallet. You may try the fuction: 
+```dart
+    AuraWalletInfoData walletInfoData = await  auraSDK.externalWallet.requestAccessWallet();
+```
+
+
+### 3. In-App Wallet
+
+##### 1. Create random HD Wallet
+``` dart
+    WalletInfo walletInfo = await auraSDK.inAppWallet.createRandomHDWallet();
+``` 
+
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
 ```dart
-const like = 'sample';
+import 'package:aura_sdk/aura_sdk.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final AuraConnectSdk _connectSdk = AuraConnectSdk();
+
+  AuraWalletInfoData? data;
+
+  @override
+  void initState() {
+    _connectSdk.init(
+      callbackUrl: 'app://open.my.app',
+      yourAppName: 'Example',
+      yourAppLogo: 'logo',
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _connectSdk.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Aura sdk connect example app'),
+        ),
+        body: SizedBox(
+          width: 400,
+          height: 800,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  await _connectSdk.connectWallet().then((connection) {
+                    print(connection.result);
+                  }).catchError((error) {
+                    print('error --$error');
+                  });
+                },
+                child: const Text('Open'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await _connectSdk.requestAccessWallet().then((walletData) {
+                    setState(() {
+                      data = walletData;
+                    });
+                  }).catchError((error) {
+                    print('request access Wallet error ${error}');
+                  });
+                },
+                child: const Text('Get account'),
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              if (data != null) ...[
+                Text('address : ${data!.data.address}'),
+                Text('name : ${data!.data.name}'),
+              ]
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 ```
-
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.

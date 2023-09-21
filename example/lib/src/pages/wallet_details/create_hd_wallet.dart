@@ -1,5 +1,3 @@
-import 'package:aura_wallet_core/aura_environment.dart';
-import 'package:aura_wallet_core/aura_wallet_core.dart';
 import 'package:example/src/pages/inapp_wallet_singleton_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -147,14 +145,14 @@ class _CreateHdWalletPageState extends State<CreateHdWalletPage>
       });
     } catch (e) {
       print(e.toString());
-      if(context.mounted){
+      if (context.mounted) {
         showDialog(
           context: context,
           builder: (context) {
             return Dialog(
               elevation: 0,
-              shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
               backgroundColor: Colors.white,
               child: MessageDialog(
                 message: e.toString(),
