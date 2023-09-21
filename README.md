@@ -6,7 +6,8 @@ Add [install](https://github.com/aura-nw/aura-wallet-core) to your pubspec.yaml
 Example
 
 ```yaml
-    aura_wallet_core 1.0.0
+dependencies:
+    aura_wallet_core : 1.0.0
 ```
 
 ## Step by step
