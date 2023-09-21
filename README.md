@@ -24,27 +24,7 @@ Example
 ```
  callBackUrl is the link that the wallet will open after user approved the connection
 
-### 2. External Wallet
-
-##### 1. Call the function sdk.connectWallet() to open connection with the Wallet
-``` dart
-	AuraWalletConnectionResult result = await auraSDK.externalWallet.connectWallet();
-```
- AuraWalletConnectionResult  is the result of the connection, you have to storage the result.idConnection to use for "transfer fuction" later
- 
- 
-##### 3. After the **connectWallet()** has been called, the SDK will open the Wallet, and send a request for connect. We have some note on this step:
-- The Wallet MUST init the Aura Chain ( Mainnet or Testnet )
-- If you use the iOS, the trigger "Approved" will automatic open the callBackUrl, but if you use the Android devices, the callBackUrl may not called, you have to open your DApp manual ** (This is a known issuse, we are working on this to fix)**
-
-
-##### 4. Now, the connection is ready, you can work with the Wallet. You may try the fuction: 
-```dart
-    AuraWalletInfoData walletInfoData = await  auraSDK.externalWallet.requestAccessWallet();
-```
-
-
-### 3. In-App Wallet
+### 2. In-App Wallet
 
 ##### 1. Create random HD Wallet
 ``` dart
