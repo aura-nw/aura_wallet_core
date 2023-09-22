@@ -1,24 +1,50 @@
+
 # Aura Wallet Core
-Aura Wallet Core is a library that supports creating and managing Aura cryptocurrency wallets within your application. This library provides an abstract interface for creating, restoring, and managing Aura cryptocurrency wallets, allowing you to easily integrate them into your application.
+
+Aura Wallet Core is a library designed to simplify the creation and management of Aura cryptocurrency wallets within your application. This library provides an abstract interface for creating, restoring, and managing Aura cryptocurrency wallets, allowing for seamless integration into your projects.
+
+## Table of Contents
+
+- [Aura Wallet Core](#aura-wallet-core)
+  - [Table of Contents](#table-of-contents)
+  - [Roadmap](#roadmap)
+  - [Getting Started](#getting-started)
+  - [Basic Usage](#basic-usage)
+    - [Creating a New Aura Wallet](#creating-a-new-aura-wallet)
+    - [Restoring an Aura Wallet](#restoring-an-aura-wallet)
+    - [Loading a Stored Aura Wallet](#loading-a-stored-aura-wallet)
+    - [Removing an Aura Wallet](#removing-an-aura-wallet)
+    - [Using the Aura Wallet](#using-the-aura-wallet)
+      - [Creating a Transaction](#creating-a-transaction)
+      - [Submitting a Transaction](#submitting-a-transaction)
+      - [Checking Wallet Balance](#checking-wallet-balance)
+      - [Checking Wallet Transaction History](#checking-wallet-transaction-history)
+      - [Querying Smart Contracts](#querying-smart-contracts)
+      - [Verifying Transaction Status](#verifying-transaction-status)
+      - [Getting Wallet Passphrase](#getting-wallet-passphrase)
+  - [Documentation](#documentation)
+  - [Issues and Feedback](#issues-and-feedback)
+  - [License](#license)
 
 ## Roadmap
+
 - [x] Create HDWallet
 - [x] Restore HDWallet
 - [x] Check Wallet Balance
 - [x] Check Wallet History
-- [x] Make(Sign) / Send transaction 
-- [ ] Option for storage data with Biometric Secure
+- [x] Make(Sign) / Send transaction
+- [ ] Option for secure storage with Biometric Authentication
 
 ## Getting Started
 
-To begin using Aura Wallet Core, you need to add the library to your project. Here's how you can do that:
+To begin using Aura Wallet Core in your project, follow these steps:
 
-1. Add `aura_wallet_core` to the `dependencies` section of your `pubspec.yaml` file:
+1. Add `aura_wallet_core` to your project's dependencies by adding the following line to your `pubspec.yaml` file:
 
-```yaml
-dependencies:
-  aura_wallet_core: ^latest_version
-```
+   ```yaml
+   dependencies:
+     aura_wallet_core: ^latest_version
+   ```
 
 2. Run the `flutter pub get` command to install the library.
 
@@ -78,7 +104,7 @@ await walletCore.removeWallet(
 );
 ```
 
-### Step 6: Using the AuraWallet
+### Using the Aura Wallet
 
 With the `AuraWallet` instance obtained from Aura Wallet Core, you can perform various wallet-related operations, such as creating transactions, checking balances, and more.
 
@@ -158,4 +184,3 @@ Please report any issues or provide feedback on [GitHub](https://github.com/aura
 ## License
 
 This library is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-```
