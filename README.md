@@ -1,5 +1,14 @@
 # aura_sdk
 
+
+## Roadmap
+[x] Create HDWallet
+[x] Restore HDWallet
+[x] Check Wallet Balance
+[x] Check Wallet History
+[x] Make(Sign) / Send transaction 
+[ ] Option for storage data with Biometric Secure
+
 ## Installation
 Add [install](https://github.com/aura-nw/aura-wallet-core) to your pubspec.yaml
 
@@ -46,7 +55,7 @@ dependencies:
         print("error");
     }
 ``` 
-##### 3. Wallet Balance/Histor
+##### 4. Wallet Balance/History
 ``` dart
     /// Check Wallet Balance
     final String balance = await auraWallet.checkWalletBalance() ?? '';
