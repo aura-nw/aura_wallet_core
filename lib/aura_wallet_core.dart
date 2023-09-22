@@ -1,18 +1,16 @@
-import 'package:aura_wallet_core/src/config_options/biometric_options.dart';
-
 import 'src/aura_internal_wallet_ipml.dart';
+import 'src/config_options/biometric_options.dart';
 import 'src/constants/aura_constants.dart';
 import 'src/entities/aura_wallet.dart';
 import 'src/env/env.dart';
 
 /// An abstract class representing the core functionality of an Aura wallet.
 abstract class AuraWalletCore {
-  /// Factory method to create an instance of [AuraWalletCore].
-  ///
-  /// [environment]: The environment configuration for the wallet.
-  factory AuraWalletCore.create(
-      {required AuraWalletCoreEnvironment environment,
-      BiometricOptions? biometricOptions}) {
+  /// Factory constructor for creating an instance of [AuraWalletCore].
+  factory AuraWalletCore.create({
+    required AuraWalletCoreEnvironment environment,
+    BiometricOptions? biometricOptions,
+  }) {
     return _instance(environment, biometricOptions);
   }
 
@@ -26,25 +24,35 @@ abstract class AuraWalletCore {
         biometricOptions: biometricOptions,
       );
 
-  /// Create a new random Hierarchical Deterministic (HD) wallet.
+  /// Generates a random HD wallet.
   ///
-  /// Returns a [AuraFullInfoWallet] representing the newly created wallet.
-  Future<AuraFullInfoWallet> createRandomHDWallet();
+  /// Returns an [ComprehensiveWallet] containing the wallet information.
+  Future<ComprehensiveWallet> createRandomHDWallet();
 
-  /// Restore an HD wallet using a provided key.
+  /// Restores a HD wallet from a passphrase.
   ///
-  /// [key]: The key used for wallet restoration.
+  /// [passPhrase]: The passphrase used to restore the wallet.
+  /// [walletName]: The name of the wallet (default is [CONST_DEFAULT_WALLET_NAME]).
   ///
-  /// Returns a [AuraWallet] object representing the restored wallet.
-  Future<AuraWallet> restoreHDWallet(
-      {required String passPhrase,
-      String walletName = CONST_DEFAULT_WALLET_NAME});
+  /// Returns an [AuraWallet] instance.
+  Future<AuraWallet> restoreHDWallet({
+    required String passPhrase,
+    String walletName = CONST_DEFAULT_WALLET_NAME,
+  });
 
-  /// Load the current wallet associated with the given Bech32 address.
+  /// Loads a previously stored wallet.
   ///
-  /// [bech32Address]: The Bech32 address of the wallet to load.
+  /// [walletName]: The name of the wallet to load (default is [CONST_DEFAULT_WALLET_NAME]).
   ///
-  /// Returns a [AuraWallet] object if the wallet exists, or null if not found.
-  Future<AuraWallet?> loadStoragedWallet(
-      {String walletName = CONST_DEFAULT_WALLET_NAME});
+  /// Returns an [AuraWallet] instance or `null` if no wallet is found.
+  Future<AuraWallet?> loadStoredWallet({
+    String walletName = CONST_DEFAULT_WALLET_NAME,
+  });
+
+  /// Removes a wallet from storage.
+  ///
+  /// [walletName]: The name of the wallet to remove (default is [CONST_DEFAULT_WALLET_NAME]).
+  Future<void> removeWallet({
+    String walletName = CONST_DEFAULT_WALLET_NAME,
+  });
 }

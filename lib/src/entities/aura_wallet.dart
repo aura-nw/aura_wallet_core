@@ -1,6 +1,5 @@
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
-
-import '../core/type_data/aura_type_data.dart';
+import '../core/type_data/aura_transaction_info.dart';
 import '../env/env.dart';
 
 abstract class AuraWallet {
@@ -67,15 +66,15 @@ abstract class AuraWallet {
   ///
   /// Return mnemonic of user
   ///
-  Future<String?> getCurrentMnemonicOrPrivateKey();
+  Future<String?> getWalletPassPhrase();
 }
 
-abstract class AuraFullInfoWallet {
+abstract class ComprehensiveWallet {
   final String mnemonic;
   final String privateKey;
   final AuraWallet auraWallet;
 
-  AuraFullInfoWallet({
+  ComprehensiveWallet({
     required this.mnemonic,
     required this.privateKey,
     required this.auraWallet,

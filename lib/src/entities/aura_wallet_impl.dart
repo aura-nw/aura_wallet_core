@@ -13,8 +13,9 @@ import 'package:alan/proto/cosmos/bank/v1beta1/export.dart' as bank;
 import 'package:alan/proto/cosmwasm/wasm/v1/export.dart' as cosMWasm;
 import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
 
+import '../constants/error_constants.dart';
 import '../core/exceptions/aura_internal_exception.dart';
-import '../core/repo/di.dart';
+import '../core/repo/store_house.dart';
 import '../core/utils/aura_inapp_wallet_helper.dart';
 import '../core/utils/grpc_logger.dart';
 
@@ -156,43 +157,61 @@ class AuraWalletImpl extends AuraWallet {
       return listData;
     } catch (e, s) {
       // Handle any exceptions that might occur while fetching transactions.
-      // You may want to log the error or handle it differently based on your application's needs.
       return null;
     }
   }
 
+  /// Executes an interactive query on a smart contract located at [contractAddress] with the provided [query].
+  ///
+  /// Throws an [UnimplementedError] if the [contractAddress] is empty or if there are multiple queries in the [query] map.
+  ///
+  /// Returns the response from the smart contract as a string.
   @override
   Future<String> makeInteractiveQuerySmartContract({
     required String contractAddress,
     required Map<String, dynamic> query,
   }) async {
+    // Check if the contract address is empty.
     if (contractAddress.isEmpty) {
-      throw UnimplementedError('Contract address is not empty');
+      throw AuraInternalError(
+          ErrorCode.ContractAddressEmpty, 'Contract address is not empty');
     }
 
-    ///validate queries
-    if (query.keys.toList().length != 1) {
-      throw UnimplementedError('Queries not valid');
+    // Check if there is exactly one query in the map.
+    if (query.keys.length != 1) {
+      throw AuraInternalError(ErrorCode.InvalidQuery, 'Queries not valid');
     }
-    var networkInfo = Storehouse.networkInfo;
-    List<int> queryData = jsonEncode(query).codeUnits;
 
-    final cosMWasm.QueryClient client = cosMWasm.QueryClient(
+    try {
+      var networkInfo = Storehouse.networkInfo;
+      List<int> queryData = jsonEncode(query).codeUnits;
+
+      final cosMWasm.QueryClient client = cosMWasm.QueryClient(
         networkInfo.gRPCChannel,
-        interceptors: [LogInter()]);
+        interceptors: [LogInter()],
+      );
 
-    final cosMWasm.QuerySmartContractStateRequest request =
-        cosMWasm.QuerySmartContractStateRequest(
-      address: contractAddress,
-      queryData: queryData,
-    );
+      final cosMWasm.QuerySmartContractStateRequest request =
+          cosMWasm.QuerySmartContractStateRequest(
+        address: contractAddress,
+        queryData: queryData,
+      );
 
-    final cosMWasm.QuerySmartContractStateResponse response =
-        await client.smartContractState(request);
+      final cosMWasm.QuerySmartContractStateResponse response =
+          await client.smartContractState(request);
 
-    return String.fromCharCodes(response.data);
+      return String.fromCharCodes(response.data);
+    } catch (e, s) {
+      // Handle any exceptions that might occur during the query.
+      throw AuraInternalError(ErrorCode.QueryFailed, 'Query failed: $e');
+    }
   }
 
+  /// Executes an interactive write operation on a smart contract located at [contractAddress].
+  ///
+  /// Throws an [AuraInternalError] with a specific error code and message if any validation fails.
+  ///
+  /// Returns the transaction hash if the operation is successful.
   @override
   Future<String> makeInteractiveWriteSmartContract({
     required String contractAddress,
@@ -200,35 +219,39 @@ class AuraWalletImpl extends AuraWallet {
     List<int>? funds,
     int? fee,
   }) async {
-    ///Validator
-    ///
+    // Validate the contract address.
     if (contractAddress.isEmpty) {
-      throw AuraInternalError(4, 'Contract address is not empty');
+      throw AuraInternalError(
+          ErrorCode.ContractAddressEmpty, 'Contract address is not empty');
     }
 
-    if (fee != null) {
-      if (fee < 200) {
-        throw AuraInternalError(5, 'Min fee is 200');
-      }
+    // Validate the fee.
+    if (fee != null && fee < 200) {
+      throw AuraInternalError(ErrorCode.InvalidFee, 'Min fee is 200');
     }
 
+    // Get the denomination from the environment.
     String denom = AuraWalletUtil.getDenom(environment);
 
+    // Load the wallet passphrase.
     String? passPhrase =
-        await Storehouse.storage.loadWalletPassPhrase(walletName: walletName);
+        await Storehouse.storage.readWalletPassPhrase(walletName: walletName);
 
+    // Check if the passphrase is null.
     if (passPhrase == null) {
-      /// Todo throw exception
-      throw AuraInternalError(111, "message");
+      throw AuraInternalError(
+          ErrorCode.PassphraseNotFound, 'Passphrase not found');
     }
+
+    // Derive the wallet from the passphrase.
     final wallet = Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
 
-    ///1 : Create message
-    ///
+    // Create the message.
     final List<int> msg = jsonEncode(executeMessage).codeUnits;
 
     List<Coin> coins = List.empty(growable: true);
 
+    // Add funds to the list of coins if funds are provided.
     if (funds != null) {
       coins.addAll(funds.map(
         (e) => Coin.create()
@@ -236,9 +259,12 @@ class AuraWalletImpl extends AuraWallet {
           ..denom = denom,
       ));
     }
+
+    // Get the wallet address.
     String? bech32Address =
         await Storehouse.storage.getWalletAddress(walletName: walletName);
 
+    // Create the execute contract message.
     final cosMWasm.MsgExecuteContract request = cosMWasm.MsgExecuteContract(
       contract: contractAddress,
       sender: bech32Address,
@@ -246,13 +272,16 @@ class AuraWalletImpl extends AuraWallet {
       funds: coins,
     );
 
-    ///2 : Create fee
+    // Create the fee.
     final Fee feeData = AuraInAppWalletHelper.createFee(
-        amount: (fee ?? 200).toString(), environment: environment);
+      amount: (fee ?? 200).toString(),
+      environment: environment,
+    );
 
+    // Get the network info.
     var networkInfo = Storehouse.networkInfo;
 
-    ///3 : Create and sign transaction
+    // Sign the transaction.
     Tx tx = await AuraInAppWalletHelper.signTransaction(
       networkInfo: networkInfo,
       wallet: wallet,
@@ -260,31 +289,51 @@ class AuraWalletImpl extends AuraWallet {
       fee: feeData,
     );
 
-    ///4: create tx sender
+    // Create the transaction sender.
     final txSender = TxSender.fromNetworkInfo(networkInfo);
 
-    ///5: broadcast transaction
+    // Broadcast the transaction.
     final response = await txSender.broadcastTx(tx);
 
+    // Check if the transaction was successful.
     if (response.isSuccessful) {
       return response.txhash;
     }
+
+    // If the transaction failed, throw an AuraInternalError with a specific error code and message.
     throw AuraInternalError(
-        150, 'Broadcast transaction error\n${response.rawLog}');
+      ErrorCode.TransactionBroadcastFailed,
+      'Broadcast transaction error\n${response.rawLog}',
+    );
   }
 
+  /// Retrieves the wallet passphrase from the local storage.
+  ///
+  /// Returns the wallet passphrase if it exists; otherwise, returns null.
+  ///
+  /// Throws an [AuraInternalError] with a specific error code and message if any error occurs.
   @override
-  Future<String?> getCurrentMnemonicOrPrivateKey() async {
+  Future<String?> getWalletPassPhrase() async {
     try {
-      return Storehouse.storage.loadWalletPassPhrase(walletName: walletName);
+      return Storehouse.storage.readWalletPassPhrase(walletName: walletName);
     } catch (e) {
-      /// Todo handle error
+      // Handle the error and throw an AuraInternalError with the appropriate error code and message.
       String message =
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
-      throw AuraInternalError(2, message);
+      throw AuraInternalError(ErrorCode.WalletPassphraseError, message);
     }
   }
 
+  /// Creates and sends a transaction to the specified recipient.
+  ///
+  /// - [toAddress]: The recipient's address.
+  /// - [amount]: The amount to send.
+  /// - [fee]: The transaction fee.
+  /// - [memo]: An optional memo for the transaction.
+  ///
+  /// Returns a [Tx] object representing the transaction.
+  ///
+  /// Throws an [AuraInternalError] with a specific error code and message if any error occurs.
   @override
   Future<Tx> makeTransaction({
     required String toAddress,
@@ -293,9 +342,8 @@ class AuraWalletImpl extends AuraWallet {
     String? memo,
   }) async {
     String denom = AuraWalletUtil.getDenom(environment);
-    //
 
-    // Step #1 : create msgSend
+    // Step #1: Create a message for the transaction.
     final MsgSend message = bank.MsgSend.create()
       ..fromAddress = bech32Address
       ..toAddress = toAddress;
@@ -303,72 +351,85 @@ class AuraWalletImpl extends AuraWallet {
       ..denom = denom
       ..amount = amount);
 
-    // Step #2 : create fee
+    // Step #2: Create the transaction fee.
     final Fee feeData =
         AuraInAppWalletHelper.createFee(amount: fee, environment: environment);
 
     var networkInfo = Storehouse.networkInfo;
 
     String? passPhrase =
-        await Storehouse.storage.loadWalletPassPhrase(walletName: walletName);
+        await Storehouse.storage.readWalletPassPhrase(walletName: walletName);
 
     if (passPhrase == null) {
-      /// Todo throw exception
-      throw AuraInternalError(111, "message");
+      // Handle the case where the passphrase is null and throw an AuraInternalError.
+      throw AuraInternalError(ErrorCode.NullPassphrase, "Passphrase is null");
     }
     final wallet = Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
 
-    Tx a = await AuraInAppWalletHelper.signTransaction(
-      networkInfo: networkInfo,
-      wallet: wallet,
-      msgSend: [message],
-      fee: feeData,
-      memo: memo,
-    );
-    return a;
+    try {
+      // Sign the transaction.
+      Tx signedTx = await AuraInAppWalletHelper.signTransaction(
+        networkInfo: networkInfo,
+        wallet: wallet,
+        msgSend: [message],
+        fee: feeData,
+        memo: memo,
+      );
+
+      return signedTx;
+    } catch (e, s) {
+      // Handle any error that occurs during transaction signing.
+      String errorMessage =
+          e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
+      throw AuraInternalError(ErrorCode.TransactionSigningError, errorMessage);
+    }
   }
 
+  /// Verifies the validity of a transaction using its transaction hash.
+  ///
+  /// - [txHash]: The transaction hash to verify.
+  ///
+  /// Returns `true` if the transaction is valid, otherwise `false`.
+  ///
+  /// Throws an [AuraInternalError] with a specific error code and message if any error occurs.
   @override
   Future<bool> verifyTxHash({required String txHash}) async {
-    String baseUrl = '';
-    String chainId = '';
+    String baseUrl = AuraWalletUtil.getBaseUrl(environment);
+    String chainId = AuraWalletUtil.getChainId(environment);
 
-    switch (environment) {
-      case AuraWalletCoreEnvironment.testNet:
-        baseUrl = 'https://indexer.dev.aurascan.io';
-        chainId = 'serenity-testnet-001';
-        break;
-      case AuraWalletCoreEnvironment.euphoria:
-        baseUrl = 'https://indexer.staging.aurascan.io';
-        chainId = 'euphoria-2';
-        break;
-      case AuraWalletCoreEnvironment.mainNet:
-        baseUrl = 'https://horoscope.aura.network';
-        chainId = 'xstaxy-1';
-        break;
+    try {
+      HttpClient client = HttpClient();
+
+      final request = await client.getUrl(Uri.parse(
+          '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId'));
+
+      final HttpClientResponse response = await request.close();
+
+      final String data =
+          await (response.transform(utf8.decoder).join()).whenComplete(
+        () => client.close(),
+      );
+
+      List<Map<String, dynamic>> trans =
+          List.from(jsonDecode(data)['data']['transactions']);
+
+      if (trans.isEmpty) {
+        // Throw an error if no transactions are found.
+        throw AuraInternalError(
+            ErrorCode.NoTransactionsFound, 'No transactions found');
+      }
+
+      Map<String, dynamic> tran =
+          Map<String, dynamic>.from(trans[0]['tx_response']);
+
+      // Check if the transaction code is "0" (indicating success).
+      return tran['code'] == "0";
+    } catch (e) {
+      // Handle any error that occurs during verification.
+      String errorMessage =
+          e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
+      throw AuraInternalError(
+          ErrorCode.TransactionVerificationError, errorMessage);
     }
-    HttpClient client = HttpClient();
-
-    final request = await client.getUrl(Uri.parse(
-        '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId'));
-
-    final HttpClientResponse response = await request.close();
-
-    final String data =
-        await (response.transform(utf8.decoder).join()).whenComplete(
-      () => client.close(),
-    );
-
-    List<Map<String, dynamic>> trans =
-        List.from(jsonDecode(data)['data']['transactions']);
-
-    if (trans.isEmpty) {
-      throw AuraInternalError(3, 'Wait save transactions');
-    }
-
-    Map<String, dynamic> tran =
-        Map<String, dynamic>.from(trans[0]['tx_response']);
-
-    return tran['code'] == "0";
   }
 }

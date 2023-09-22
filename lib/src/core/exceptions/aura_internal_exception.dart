@@ -8,6 +8,6 @@ class AuraInternalError extends Error {
   );
   @override
   String toString() {
-    return '[InternalSDKError][$errorCode] - $message';
+    return '[InternalError][$errorCode] - $message';
   }
 }

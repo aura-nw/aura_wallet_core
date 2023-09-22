@@ -57,7 +57,7 @@ class AuraInternalStorage {
     await _storage.write(key: walletAddress, value: passphrase);
   }
 
-  Future<String?> loadWalletPassPhrase({required String walletName}) async {
+  Future<String?> readWalletPassPhrase({required String walletName}) async {
     String? walletAddress = await _storage.read(
         key: walletName,
         aOptions: _getNonSecureAndroidOptions,
@@ -78,56 +78,10 @@ class AuraInternalStorage {
     return walletAddress;
   }
 
-  // Future<void> saveAuraMnemonicOrPrivateKey(
-  //     String address, String privateKey) async {
-  //   return _storage.write(
-  //     key: address,
-  //     value: privateKey,
-  //   );
-  // }
-
-  // Future<String?> readPrivateKey(String address) async {
-  //   return _storage.read(key: address);
-  // }
-
-  // Future<bool> checkExistsPrivateKey(String address) async {
-  //   return _storage.containsKey(key: address);
-  // }
-
-  // Future<void> removePrivateKey(String address) async {
-  //   return _storage.delete(key: address);
-  // }
-
-  // Future<void> saveBech32Address(String bech32Address) async {
-  //   return _storage.write(
-  //     key: 'bech32Address',
-  //     value: bech32Address,
-  //     iOptions: _getNonSecureIosOptions,
-  //     aOptions: _getNonSecureAndroidOptions,
-  //   );
-  // }
-
-  // Future<String?> readBech32Address() async {
-  //   return _storage.read(
-  //     key: 'bech32Address',
-  //     iOptions: _getNonSecureIosOptions,
-  //     aOptions: _getNonSecureAndroidOptions,
-  //   );
-  // }
-
-  // Future<bool> checkExistsBech32Android() async {
-  //   return _storage.containsKey(
-  //     key: 'bech32Address',
-  //     iOptions: _getNonSecureIosOptions,
-  //     aOptions: _getNonSecureAndroidOptions,
-  //   );
-  // }
-
-  // Future<void> removeBech32Address() async {
-  //   return _storage.delete(
-  //     key: 'bech32Address',
-  //     iOptions: _getNonSecureIosOptions,
-  //     aOptions: _getNonSecureAndroidOptions,
-  //   );
-  // }
+  Future<void> deleteWallet({required String walletName}) async {
+    await _storage.delete(
+        key: walletName,
+        aOptions: _getNonSecureAndroidOptions,
+        iOptions: _getNonSecureIosOptions);
+  }
 }

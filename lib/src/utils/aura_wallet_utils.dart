@@ -50,6 +50,27 @@ class AuraWalletUtil {
       return 'ueaura';
     }
     return "uaura";
-    ;
+  }
+
+  static String getBaseUrl(AuraWalletCoreEnvironment environment) {
+    switch (environment) {
+      case AuraWalletCoreEnvironment.testNet:
+        return 'https://indexer.dev.aurascan.io';
+      case AuraWalletCoreEnvironment.euphoria:
+        return 'https://indexer.staging.aurascan.io';
+      case AuraWalletCoreEnvironment.mainNet:
+        return 'https://horoscope.aura.network';
+    }
+  }
+
+  static String getChainId(AuraWalletCoreEnvironment environment) {
+    switch (environment) {
+      case AuraWalletCoreEnvironment.testNet:
+        return 'serenity-testnet-001';
+      case AuraWalletCoreEnvironment.euphoria:
+        return 'euphoria-2';
+      case AuraWalletCoreEnvironment.mainNet:
+        return 'xstaxy-1';
+    }
   }
 }
