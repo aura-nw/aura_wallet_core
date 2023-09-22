@@ -1,15 +1,16 @@
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
-import 'package:alan/wallet/wallet.dart';
 
 import '../core/type_data/aura_type_data.dart';
 import '../env/env.dart';
 
 abstract class AuraWallet {
-  final Wallet wallet;
+  final String walletName;
+  final String bech32Address;
   final AuraWalletCoreEnvironment environment;
 
   const AuraWallet({
-    required this.wallet,
+    required this.walletName,
+    required this.bech32Address,
     required this.environment,
   });
 
@@ -66,9 +67,7 @@ abstract class AuraWallet {
   ///
   /// Return mnemonic of user
   ///
-  Future<String?> getCurrentMnemonicOrPrivateKey(String bech32Address);
-
-  Future<bool> removeCurrentWallet(String bech32Address);
+  Future<String?> getCurrentMnemonicOrPrivateKey();
 }
 
 abstract class AuraFullInfoWallet {

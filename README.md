@@ -1,4 +1,4 @@
-# aura_sdk
+# Aura Wallet Core
 
 
 ## Roadmap

@@ -3,9 +3,9 @@ class AuraInternalError extends Error {
   final int errorCode;
 
   AuraInternalError(
-      this.errorCode,
-      this.message,
-      );
+    this.errorCode,
+    this.message,
+  );
   @override
   String toString() {
     return '[InternalSDKError][$errorCode] - $message';

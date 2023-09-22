@@ -1,36 +1,40 @@
+import 'package:aura_wallet_core/src/config_options/biometric_options.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuraInternalStorage {
   late FlutterSecureStorage _storage;
 
-  AuraInternalStorage._() {
-    AndroidOptions androidOptions = const AndroidOptions(
+  AuraInternalStorage._(BiometricOptions? biometricOptions) {
+    UserAuthenticationRequiredAndroid? authenticationRequiredAndroid;
+    IOSUserAuthenticationRequired? authenticationRequiredIOS;
+    if (biometricOptions != null) {
+      authenticationRequiredAndroid = UserAuthenticationRequiredAndroid(
+          bioMetricSubTitle: biometricOptions.requestSubtitle,
+          bioMetricTitle: biometricOptions.requestTitle,
+          userAuthenticationTimeout: biometricOptions.authenticationTimeOut);
+
+      authenticationRequiredIOS = IOSUserAuthenticationRequired(
+        localizedReason: biometricOptions.requestSubtitle,
+        userAuthenticationTimeout: biometricOptions.authenticationTimeOut,
+      );
+    }
+
+    AndroidOptions androidOptions = AndroidOptions(
       encryptedSharedPreferences: true,
       preferencesKeyPrefix: 'aura_sdk_prefix',
       sharedPreferencesName: 'aura_sdk',
-      userAuthenticationRequiredAndroid: UserAuthenticationRequiredAndroid(
-        bioMetricTitle: 'Wallet Authentication',
-        bioMetricSubTitle: 'You need authentication to access your wallet',
-        userAuthenticationTimeout: 10,
-      ),
+      userAuthenticationRequiredAndroid: authenticationRequiredAndroid,
     );
     _storage = FlutterSecureStorage(
       aOptions: androidOptions,
       iOptions: IOSOptions(
-        iosUserAuthenticationRequired: IOSUserAuthenticationRequired(
-          localizedReason: 'You need authentication to access your wallet',
-          userAuthenticationTimeout: 10,
-        ),
+        iosUserAuthenticationRequired: authenticationRequiredIOS,
       ),
     );
   }
 
-  static AuraInternalStorage? _internalStorage;
-
-  factory AuraInternalStorage() {
-    _internalStorage ??= AuraInternalStorage._();
-
-    return _internalStorage!;
+  factory AuraInternalStorage(BiometricOptions? biometricOptions) {
+    return AuraInternalStorage._(biometricOptions);
   }
 
   final IOSOptions _getNonSecureIosOptions = const IOSOptions();
@@ -40,56 +44,90 @@ class AuraInternalStorage {
     sharedPreferencesName: 'aura_sdk_non_secure',
   );
 
-  Future<void> saveAuraMnemonicOrPrivateKey(
-      String address, String privateKey) async {
-    return _storage.write(
-      key: address,
-      value: privateKey,
-    );
+  Future<void> saveWalletToStorage(
+      {required String walletName,
+      required String walletAddress,
+      required String passphrase}) async {
+    await _storage.write(
+        key: walletName,
+        value: walletAddress,
+        aOptions: _getNonSecureAndroidOptions,
+        iOptions: _getNonSecureIosOptions);
+
+    await _storage.write(key: walletAddress, value: passphrase);
   }
 
-  Future<String?> readPrivateKey(String address) async {
-    return _storage.read(key: address);
+  Future<String?> loadWalletPassPhrase({required String walletName}) async {
+    String? walletAddress = await _storage.read(
+        key: walletName,
+        aOptions: _getNonSecureAndroidOptions,
+        iOptions: _getNonSecureIosOptions);
+    if (walletAddress == null) {
+      return null;
+    }
+
+    String? passPhrase = await _storage.read(key: walletAddress);
+    return passPhrase;
   }
 
-  Future<bool> checkExistsPrivateKey(String address) async {
-    return _storage.containsKey(key: address);
+  Future<String?> getWalletAddress({required String walletName}) async {
+    String? walletAddress = await _storage.read(
+        key: walletName,
+        aOptions: _getNonSecureAndroidOptions,
+        iOptions: _getNonSecureIosOptions);
+    return walletAddress;
   }
 
-  Future<void> removePrivateKey(String address) async {
-    return _storage.delete(key: address);
-  }
+  // Future<void> saveAuraMnemonicOrPrivateKey(
+  //     String address, String privateKey) async {
+  //   return _storage.write(
+  //     key: address,
+  //     value: privateKey,
+  //   );
+  // }
 
-  Future<void> saveBech32Address(String bech32Address) async {
-    return _storage.write(
-      key: 'bech32Address',
-      value: bech32Address,
-      iOptions: _getNonSecureIosOptions,
-      aOptions: _getNonSecureAndroidOptions,
-    );
-  }
+  // Future<String?> readPrivateKey(String address) async {
+  //   return _storage.read(key: address);
+  // }
 
-  Future<String?> readBech32Address() async {
-    return _storage.read(
-      key: 'bech32Address',
-      iOptions: _getNonSecureIosOptions,
-      aOptions: _getNonSecureAndroidOptions,
-    );
-  }
+  // Future<bool> checkExistsPrivateKey(String address) async {
+  //   return _storage.containsKey(key: address);
+  // }
 
-  Future<bool> checkExistsBech32Android() async {
-    return _storage.containsKey(
-      key: 'bech32Address',
-      iOptions: _getNonSecureIosOptions,
-      aOptions: _getNonSecureAndroidOptions,
-    );
-  }
+  // Future<void> removePrivateKey(String address) async {
+  //   return _storage.delete(key: address);
+  // }
 
-  Future<void> removeBech32Address() async {
-    return _storage.delete(
-      key: 'bech32Address',
-      iOptions: _getNonSecureIosOptions,
-      aOptions: _getNonSecureAndroidOptions,
-    );
-  }
+  // Future<void> saveBech32Address(String bech32Address) async {
+  //   return _storage.write(
+  //     key: 'bech32Address',
+  //     value: bech32Address,
+  //     iOptions: _getNonSecureIosOptions,
+  //     aOptions: _getNonSecureAndroidOptions,
+  //   );
+  // }
+
+  // Future<String?> readBech32Address() async {
+  //   return _storage.read(
+  //     key: 'bech32Address',
+  //     iOptions: _getNonSecureIosOptions,
+  //     aOptions: _getNonSecureAndroidOptions,
+  //   );
+  // }
+
+  // Future<bool> checkExistsBech32Android() async {
+  //   return _storage.containsKey(
+  //     key: 'bech32Address',
+  //     iOptions: _getNonSecureIosOptions,
+  //     aOptions: _getNonSecureAndroidOptions,
+  //   );
+  // }
+
+  // Future<void> removeBech32Address() async {
+  //   return _storage.delete(
+  //     key: 'bech32Address',
+  //     iOptions: _getNonSecureIosOptions,
+  //     aOptions: _getNonSecureAndroidOptions,
+  //   );
+  // }
 }
