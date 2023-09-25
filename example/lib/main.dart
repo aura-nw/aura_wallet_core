@@ -1,16 +1,28 @@
+import 'package:aura_wallet_core/aura_environment.dart';
+import 'package:aura_wallet_core/aura_wallet_core.dart';
+import 'package:example/src/app_navigator.dart';
+import 'package:example/src/application/app_theme/cubit/app_theme_cubit.dart';
+import 'package:example/src/application/global_state/global_cubit.dart';
+import 'package:example/src/application/global_state/global_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'src/pages/inapp_wallet_page.dart';
-import 'src/pages/wallet_details/check_aura_balance.dart';
-import 'src/pages/wallet_details/create_hd_wallet.dart';
-import 'src/pages/wallet_details/make_a_transaction.dart';
-import 'src/pages/wallet_details/make_query_smart_contract.dart';
-import 'src/pages/wallet_details/make_write_smart_contract.dart';
-import 'src/pages/wallet_details/restore_hd_wallet.dart';
-import 'src/pages/wallet_details/transaction_history.dart';
-import 'src/pages/wallet_details/wallet_detail_screen.dart';
+import 'src/application/global/global.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  AppGlobal.init(
+    AuraWalletCoreEnvironment.testNet,
+    BiometricOptions(
+      requestTitle: 'Your request title',
+
+      ///For android
+      requestSubtitle: 'Your request subtitle',
+      authenticationTimeOut: 10,
+    ),
+  );
+
   runApp(const MyApp());
 }
 
@@ -22,49 +34,44 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  MaterialPageRoute _defaultRouter(Widget child, RouteSettings settings) =>
-      MaterialPageRoute(
-        builder: (context) {
-          return child;
-        },
-        settings: settings,
-      );
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case '/':
-            return _defaultRouter(
-                const InAppWalletPage(title: 'Digital Wallet Demo'), settings);
-          case '/inapp-wallet':
-            return _defaultRouter(
-                const InAppWalletPage(title: 'Digital Wallet Demo'), settings);
-          case '/wallet_detail':
-            return _defaultRouter(
-              const WalletDetailScreen(),
-              settings,
-            );
-          case '/generate-hd-wallet':
-            return _defaultRouter(const CreateHdWalletPage(), settings);
-          case '/restore-hd-wallet':
-            return _defaultRouter(const RestoreHdWalletPage(), settings);
-          case '/transaction-history':
-            return _defaultRouter(const TransactionHistory(), settings);
-          case '/check-hd-wallet-balance':
-            return _defaultRouter(const CheckHDWalletBalance(), settings);
-          case '/make-transaction':
-            return _defaultRouter(const MakeTransactionPage(), settings);
-          case '/make-query-smart_contract':
-            return _defaultRouter(const MakeQuerySmartContract(), settings);
-          case '/make-write-smart_contract':
-            return _defaultRouter(const MakeWriteSmartContract(), settings);
-          default:
-            return _defaultRouter(
-                const InAppWalletPage(title: 'Digital Wallet Demo'), settings);
-        }
+      navigatorKey: AppNavigator.navigatorKey,
+      initialRoute: AppRoutePath.inAppWallet,
+      onGenerateRoute: AppNavigator.onGenerateRoute,
+      builder: (context, child) {
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => AppThemeCubit(),
+            ),
+            BlocProvider(
+              create: (context) => AppGlobalCubit(),
+            ),
+          ],
+          child: Builder(
+            builder: (context) {
+              return BlocListener<AppGlobalCubit, GlobalState>(
+                listenWhen: (previous, current) =>
+                    current.status != previous.status,
+                listener: (context, state) {
+                  switch (state.status) {
+                    case AppGlobalStatus.authorized:
+                      AppNavigator.replaceAllWith(
+                        AppRoutePath.walletDetail,
+                      );
+                      break;
+                    case AppGlobalStatus.unauthorized:
+                      AppNavigator.replaceAllWith(AppRoutePath.inAppWallet);
+                      break;
+                  }
+                },
+                child: child ?? const SizedBox(),
+              );
+            },
+          ),
+        );
       },
     );
   }

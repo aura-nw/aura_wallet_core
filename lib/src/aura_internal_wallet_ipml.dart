@@ -68,7 +68,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
           AuraInAppWalletHelper.checkMnemonic(mnemonic: passPhrase);
 
       // If it's a valid mnemonic, throw an error.
-      if (isMnemonic) {
+      if (!isMnemonic) {
         throw AuraInternalError(
           ErrorCode.InvalidPassphrase,
           'Invalid passphrase provided.',

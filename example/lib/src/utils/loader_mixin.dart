@@ -1,20 +1,21 @@
 import 'dart:async';
-
+import 'package:example/src/application/app_theme/app_theme_builder.dart';
 import 'package:flutter/material.dart';
 
 mixin ScreenLoaderMixin<T extends StatefulWidget> on State<T> {
   final loadingController = StreamController<bool>();
 
-  Widget buildLoader() {
+  Widget _buildLoader() {
     return Container(
       color: Colors.black.withOpacity(0.3),
-      child: const Center(
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      width: 72,
+      height: 72,
+      alignment: Alignment.center,
+      child: AppThemeBuilder(
+        builder: (theme) => CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            theme.primaryColor6,
           ),
         ),
       ),
@@ -48,7 +49,7 @@ mixin ScreenLoaderMixin<T extends StatefulWidget> on State<T> {
           stream: loadingController.stream,
           builder: (_, snapshot) => snapshot.data == true
               ? Positioned.fill(
-                  child: buildLoader(),
+                  child: _buildLoader(),
                 )
               : const SizedBox(),
         ),

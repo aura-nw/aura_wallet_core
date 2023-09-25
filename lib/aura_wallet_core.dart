@@ -4,6 +4,8 @@ import 'src/constants/aura_constants.dart';
 import 'src/entities/aura_wallet.dart';
 import 'src/env/env.dart';
 
+export 'src/config_options/biometric_options.dart';
+
 /// An abstract class representing the core functionality of an Aura wallet.
 abstract class AuraWalletCore {
   /// Factory constructor for creating an instance of [AuraWalletCore].
