@@ -1,6 +1,7 @@
 name: aura_wallet_core
 description: A new Flutter package project.
 version: 0.0.1
+publish_to: none
 homepage:
 
 environment:
@@ -11,11 +12,22 @@ dependencies:
   flutter:
     sdk: flutter
 
+  alan: ^0.41.4+1
+  grpc: ^3.0.0
+  hex: ^0.2.0
+  flutter_secure_storage:
+    git:
+      path: flutter_secure_storage
+      url: https://github.com/aura-nw/flutter_secure_storage.git
+      ref: feature/biometric_mobile
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-
+  mockito: ^5.4.2
+  build_runner: ^2.4.6
+  mobx_codegen: ^2.4.0
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
