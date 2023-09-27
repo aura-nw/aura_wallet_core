@@ -1,6 +1,6 @@
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
-import 'package:aura_wallet_core/cores/aura_wallet/entities/aura_transaction_info.dart';
+import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
 
 /// Abstract class representing an Aura Wallet.
 abstract class AuraWallet {

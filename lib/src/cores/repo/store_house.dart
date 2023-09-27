@@ -1,8 +1,8 @@
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
-import 'package:aura_wallet_core/cores/aura_internal_storage.dart';
-import 'package:aura_wallet_core/cores/utils/aura_wallet_utils.dart';
+import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
+import 'package:aura_wallet_core/src/cores/utils/aura_wallet_utils.dart';
 
 /// The `Storehouse` class serves as a central hub for managing dependencies and
 /// providing access to essential configuration elements within the Aura Wallet Core.

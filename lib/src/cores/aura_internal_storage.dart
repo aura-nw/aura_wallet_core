@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../config_options/biometric_options.dart';
+import '../../config_options/biometric_options.dart';
 
 class AuraInternalStorage {
   late FlutterSecureStorage _storage;

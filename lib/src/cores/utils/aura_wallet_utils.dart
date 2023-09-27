@@ -1,7 +1,7 @@
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
-import 'package:aura_wallet_core/cores/aura_internal_storage.dart';
+import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 
 // A utility class for handling configuration related to the Aura blockchain network.
 

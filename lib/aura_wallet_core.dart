@@ -2,7 +2,7 @@ library aura_wallet_core;
 
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
-import 'package:aura_wallet_core/cores/aura_wallet/aura_wallet.dart';
+import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_ipml.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
