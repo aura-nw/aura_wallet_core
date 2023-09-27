@@ -1,10 +1,31 @@
 library aura_wallet_core;
 
+import 'package:aura_wallet_core/config_options/biometric_options.dart';
+import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/cores/aura_wallet/aura_wallet.dart';
+import 'package:aura_wallet_core/src/aura_internal_wallet_ipml.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
 /// An abstract class representing the core functionality of an Aura wallet.
 abstract class AuraWalletCore {
+  /// Factory constructor for creating an instance of [AuraWalletCore].
+  factory AuraWalletCore.create({
+    required AuraEnvironment environment,
+    BiometricOptions? biometricOptions,
+  }) {
+    return _instance(environment, biometricOptions);
+  }
+
+  /// Internal method to create an instance of [AuraWalletCore].
+  static AuraWalletCore _instance(
+    AuraEnvironment environment,
+    BiometricOptions? biometricOptions,
+  ) =>
+      AuraWalletCoreImpl(
+        environment: environment,
+        biometricOptions: biometricOptions,
+      );
+
   /// Generates a random HD wallet.
   ///
   /// Returns an [ComprehensiveWallet] containing the wallet information.
