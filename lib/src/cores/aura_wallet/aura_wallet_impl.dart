@@ -154,7 +154,7 @@ class AuraWalletImpl extends AuraWallet {
               response.txResponses, transactionType);
 
       return listData;
-    } catch (e, s) {
+    } catch (e) {
       // Handle any exceptions that might occur while fetching transactions.
       return null;
     }
@@ -200,7 +200,7 @@ class AuraWalletImpl extends AuraWallet {
           await client.smartContractState(request);
 
       return String.fromCharCodes(response.data);
-    } catch (e, s) {
+    } catch (e) {
       // Handle any exceptions that might occur during the query.
       throw AuraInternalError(ErrorCode.QueryFailed, 'Query failed: $e');
     }
@@ -376,7 +376,7 @@ class AuraWalletImpl extends AuraWallet {
       );
 
       return signedTx;
-    } catch (e, s) {
+    } catch (e) {
       // Handle any error that occurs during transaction signing.
       String errorMessage =
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
