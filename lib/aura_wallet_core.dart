@@ -1,6 +1,7 @@
 library aura_wallet_core;
 
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
+import 'package:aura_wallet_core/config_options/config_options.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_ipml.dart';
@@ -12,19 +13,21 @@ abstract class AuraWalletCore {
   factory AuraWalletCore.create({
     required AuraEnvironment environment,
     BiometricOptions? biometricOptions,
+    ConfigOption configOption = const ConfigOption(isEnableLog: true),
   }) {
-    return _instance(environment, biometricOptions);
+    return _instance(environment, biometricOptions, configOption);
   }
 
   /// Internal method to create an instance of [AuraWalletCore].
   static AuraWalletCore _instance(
     AuraEnvironment environment,
     BiometricOptions? biometricOptions,
+    ConfigOption configOption,
   ) =>
       AuraWalletCoreImpl(
-        environment: environment,
-        biometricOptions: biometricOptions,
-      );
+          environment: environment,
+          biometricOptions: biometricOptions,
+          configOption: configOption);
 
   /// Generates a random HD wallet.
   ///

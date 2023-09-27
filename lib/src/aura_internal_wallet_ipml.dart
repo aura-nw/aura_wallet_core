@@ -1,6 +1,7 @@
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/aura_wallet_core.dart';
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
+import 'package:aura_wallet_core/config_options/config_options.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
@@ -20,11 +21,13 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   AuraWalletCoreImpl({
     required AuraEnvironment environment,
     required BiometricOptions? biometricOptions,
+    required ConfigOption configOption,
   }) {
     // Initialize Storehouse settings with provided environment and biometric options.
     Storehouse.environment = environment;
     Storehouse.networkInfo = AuraWalletUtil.getNetworkInfo(environment);
     Storehouse.storage = AuraInternalStorage(biometricOptions);
+    Storehouse.configOption = configOption;
   }
 
   // Create a new random HD wallet.
