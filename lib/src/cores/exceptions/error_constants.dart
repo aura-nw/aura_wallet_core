@@ -48,4 +48,16 @@ class ErrorCode {
 
   // Error code for cases where there is an error with wallet loading.
   static int WalletLoadingError = 1016;
+
+  // Error code for cases fetching balance error
+  static int FetchBalanceError = 1017;
+
+  // Error code for cases fetching wallet history error
+  static int FetchWalletHistoryError = 1018;
+
+  // Error code for cases user submit transaction error
+  static int SubmitTransactionError = 1019;
+
+  // Error code for cases user execute smart contract error
+  static int ExecuteContractError = 1020;
 }

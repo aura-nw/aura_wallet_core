@@ -51,7 +51,7 @@ class AuraWalletImpl extends AuraWallet {
         throw AuraInternalError(e.code, e.message ?? 'Unknown Error');
       }
 
-      throw AuraInternalError(502, e.toString());
+      throw AuraInternalError(ErrorCode.SubmitTransactionError, e.toString());
     }
   }
 
@@ -80,7 +80,7 @@ class AuraWalletImpl extends AuraWallet {
     } catch (e) {
       // Handle any exceptions that might occur while fetching the balance.
       throw AuraInternalError(
-          500, 'Error fetching wallet balance: ${e.toString()}');
+          ErrorCode.FetchBalanceError, 'Error fetching wallet balance: ${e.toString()}');
     }
   }
 
@@ -123,7 +123,7 @@ class AuraWalletImpl extends AuraWallet {
     } catch (e) {
       // Handle any exceptions that might occur while fetching the transaction history.
       throw AuraInternalError(
-          501, 'Error fetching wallet history: ${e.toString()}');
+          ErrorCode.FetchWalletHistoryError, 'Error fetching wallet history: ${e.toString()}');
     }
   }
 
@@ -316,7 +316,7 @@ class AuraWalletImpl extends AuraWallet {
             e.code, e.message ?? 'The grpc call had some error');
       }
 
-      throw AuraInternalError(503, e.toString());
+      throw AuraInternalError(ErrorCode.ExecuteContractError, e.toString());
     }
   }
 
