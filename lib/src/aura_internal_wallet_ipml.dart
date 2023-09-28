@@ -6,10 +6,10 @@ import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet_impl.dart';
+import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
-import 'package:aura_wallet_core/src/cores/utils/aura_wallet_utils.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 import 'package:aura_wallet_core/src/helpers/aura_wallet_helper.dart';
 
@@ -24,30 +24,31 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     required ConfigOption configOption,
   }) {
     // Initialize Storehouse settings with provided environment and biometric options.
-    Storehouse.environment = environment;
-    Storehouse.networkInfo = AuraWalletUtil.getNetworkInfo(environment);
     Storehouse.storage = AuraInternalStorage(biometricOptions);
     Storehouse.configOption = configOption;
+    const IAuraWalletCoreConfigService configService =
+        AuraWalletCoreConfigService();
+    configService.init(environment);
+    Storehouse.configService = configService;
   }
 
   // Create a new random HD wallet.
   @override
   Future<ComprehensiveWallet> createRandomHDWallet({
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   }) async {
     try {
       // Generate a random mnemonic with a strength of 256 bits.
       final List<String> mnemonic = Bip39.generateMnemonic(strength: 256);
 
       // Derive a wallet from the generated mnemonic.
-      final Wallet wallet = Wallet.derive(mnemonic, Storehouse.networkInfo);
+      final Wallet wallet = Wallet.derive(mnemonic, Storehouse.configService.networkInfo);
 
       // Create and return a ComprehensiveWallet instance with the derived wallet details.
       return ComprehensiveWallet(
         auraWallet: AuraWalletImpl(
           walletName: walletName,
           bech32Address: wallet.bech32Address,
-          environment: Storehouse.environment,
         ),
         mnemonic: mnemonic.join(' '),
         privateKey: HEX.encode(wallet.privateKey),
@@ -65,7 +66,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   @override
   Future<AuraWallet> restoreHDWallet({
     required String passPhrase,
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   }) async {
     try {
       // Check if the provided passphrase is a valid mnemonic.
@@ -81,7 +82,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
 
       // Derive a wallet from the provided passphrase.
       final Wallet wallet =
-          Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
+          Wallet.derive(passPhrase.split(' '), Storehouse.configService.networkInfo);
 
       // Save the wallet details to storage.
       await Storehouse.storage.saveWalletToStorage(
@@ -94,7 +95,6 @@ class AuraWalletCoreImpl implements AuraWalletCore {
       return AuraWalletImpl(
         walletName: walletName,
         bech32Address: wallet.bech32Address,
-        environment: Storehouse.environment,
       );
     } catch (e) {
       // Handle any exceptions that might occur during wallet restoration.
@@ -108,12 +108,12 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   // Load a stored wallet using its walletName.
   @override
   Future<AuraWallet?> loadStoredWallet({
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   }) async {
     try {
       // Attempt to read the passphrase from storage.
       String? passPhrase =
-          await Storehouse.storage.readWalletPassPhrase(walletName: walletName);
+          await Storehouse.storage.getWalletPassPhrase(key: walletName);
 
       // If the passphrase is null, return null (no wallet found).
       if (passPhrase == null) {
@@ -122,13 +122,12 @@ class AuraWalletCoreImpl implements AuraWalletCore {
 
       // Derive a wallet from the stored passphrase.
       final Wallet wallet =
-          Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
+          Wallet.derive(passPhrase.split(' '), Storehouse.configService.networkInfo);
 
       // Create and return an AuraWalletImpl instance with the loaded wallet details.
       return AuraWalletImpl(
         walletName: walletName,
         bech32Address: wallet.bech32Address,
-        environment: Storehouse.environment,
       );
     } catch (e) {
       // Handle any exceptions that might occur during wallet loading.
@@ -151,7 +150,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   // Remove a wallet with the specified walletName.
   @override
   Future<void> removeWallet(
-      {String walletName = CONST_DEFAULT_WALLET_NAME}) async {
+      {String walletName = defaultWalletName}) async {
     try {
       // Delete the wallet using the provided walletName.
       await Storehouse.storage.deleteWallet(walletName: walletName);

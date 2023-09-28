@@ -20,7 +20,7 @@ class AuraWalletHelper {
   /// Returns:
   ///   - A list of `AuraTransaction` objects.
   static List<AuraTransaction> convertToAuraTransaction(
-      List<TxResponse> txResponse, AuraTransactionType type) {
+      List<TxResponse> txResponse,) {
     List<AuraTransaction> listResult = txResponse.map((e) {
       String timeStamp = e.timestamp;
       String recipient = '';
@@ -50,7 +50,7 @@ class AuraWalletHelper {
       }
 
       AuraTransaction auraTransaction =
-          AuraTransaction(sender, recipient, amount, timeStamp, type);
+          AuraTransaction(sender, recipient, amount, timeStamp);
       return auraTransaction;
     }).toList();
     return listResult;
@@ -69,16 +69,16 @@ class AuraWalletHelper {
   /// Creates a transaction fee based on the specified amount and environment.
   ///
   /// Parameters:
-  ///   - [amount]: The transaction fee amount.
-  ///   - [environment]: The Aura environment.
+  ///   - [amount] : The transaction fee amount.
+  ///   - [gasLimit] : GasLimit of transaction
+  ///   - [denom] : The coin denom aura network
   /// Returns:
   ///   - A `Fee` object representing the transaction fee.
   static Fee createFee(
-      {required String amount, required AuraEnvironment environment}) {
-    String denom = AuraWalletUtil.getDenom(environment);
+      {required String amount, required int gasLimit , required String denom}) {
     // Compose the transaction fees
     final fee = Fee();
-    fee.gasLimit = 200000.toInt64();
+    fee.gasLimit = gasLimit.toInt64();
     fee.amount.add(
       Coin.create()
         ..amount = amount
@@ -123,14 +123,6 @@ class AuraWalletHelper {
   static bool checkPrivateKey(Uint8List privateKey) {
     Bip32EccCurve ecc = Bip32EccCurve();
 
-    if (privateKey.length != 32) {
-      return false;
-    }
-
-    if (!ecc.isPrivate(privateKey)) {
-      return false;
-    }
-
-    return true;
+    return privateKey.length == 32 && ecc.isPrivate(privateKey);
   }
 }

@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:alan/alan.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
+import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
+import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
-import 'package:aura_wallet_core/src/cores/utils/aura_wallet_utils.dart';
 import 'package:aura_wallet_core/src/debugs/grpc_logger.dart';
 import 'package:aura_wallet_core/src/helpers/aura_wallet_helper.dart';
 import 'package:flutter/services.dart';
@@ -17,16 +17,15 @@ import 'package:alan/proto/cosmos/bank/v1beta1/export.dart';
 import 'package:alan/proto/cosmos/bank/v1beta1/export.dart' as bank;
 import 'package:alan/proto/cosmwasm/wasm/v1/export.dart' as cosMWasm;
 import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
+import 'package:grpc/grpc.dart';
 
 class AuraWalletImpl extends AuraWallet {
   const AuraWalletImpl({
     required String walletName,
     required String bech32Address,
-    required AuraEnvironment environment,
   }) : super(
           walletName: walletName,
           bech32Address: bech32Address,
-          environment: environment,
         );
 
   /// Submits a signed transaction to the blockchain network.
@@ -40,14 +39,19 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<bool> submitTransaction({required Tx signedTransaction}) async {
     try {
-      var networkInfo = Storehouse.networkInfo;
+      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
       final txSender = TxSender.fromNetworkInfo(networkInfo);
       final response = await txSender.broadcastTx(signedTransaction);
 
       return response.isSuccessful;
     } catch (e) {
       // Handle any exceptions that might occur during the transaction submission.
-      return false;
+
+      if (e is GrpcError) {
+        throw AuraInternalError(e.code, e.message ?? 'Unknown Error');
+      }
+
+      throw AuraInternalError(502, e.toString());
     }
   }
 
@@ -59,13 +63,13 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<String> checkWalletBalance() async {
     try {
-      String denom = AuraWalletUtil.getDenom(environment);
+      String denom = Storehouse.configService.deNom;
       String? bech32Address =
-          await Storehouse.storage.getWalletAddress(walletName: walletName);
+          await Storehouse.storage.getWalletAddress(key: walletName);
 
       final req =
           bank.QueryBalanceRequest(address: bech32Address, denom: denom);
-      var networkInfo = Storehouse.networkInfo;
+      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
 
       final client =
           bank.QueryClient(networkInfo.gRPCChannel, interceptors: [LogInter()]);
@@ -80,29 +84,30 @@ class AuraWalletImpl extends AuraWallet {
     }
   }
 
-  Future<bool> checkMnemonic({required String mnemonic}) async {
-    return Bip39.validateMnemonic(mnemonic.split(' '));
-  }
-
   /// Retrieves the transaction history of the wallet associated with the provided [walletName].
+  ///
+  /// - [offset] : Offset transaction
+  /// - [limit] : Limit page of response
   ///
   /// Returns a list of [AuraTransaction] objects representing the transaction history.
   ///
   /// Throws an [AuraInternalError] if there's an error while fetching the transaction history.
   @override
-  Future<List<AuraTransaction>> checkWalletHistory() async {
+  Future<List<AuraTransaction>> checkWalletHistory(
+      {int offset = defaultQueryOffset, int limit = defaultQueryLimit}) async {
     try {
       String? bech32Address =
-          await Storehouse.storage.getWalletAddress(walletName: walletName);
+          await Storehouse.storage.getWalletAddress(key: walletName);
 
-      List<AuraTransaction>? listSender = await _getListTransactionByAddress(
-          bech32Address, AuraTransactionType.send);
-      List<AuraTransaction>? listRecive = await _getListTransactionByAddress(
-          bech32Address, AuraTransactionType.recive);
+      List<AuraTransaction>? listTransaction =
+          await _getListTransactionByAddress(
+        bech32Address,
+        offset: offset,
+        limit: limit,
+      );
 
       List<AuraTransaction> listAllTransaction = [];
-      listAllTransaction.addAll(listSender ?? []);
-      listAllTransaction.addAll(listRecive ?? []);
+      listAllTransaction.addAll(listTransaction ?? []);
 
       listAllTransaction.sort((a, b) {
         DateTime? aDate = DateTime.tryParse(a.timestamp);
@@ -131,17 +136,16 @@ class AuraWalletImpl extends AuraWallet {
   ///
   /// Returns `null` if there's an error or no transactions are found.
   Future<List<AuraTransaction>?> _getListTransactionByAddress(
-      String? address, AuraTransactionType transactionType) async {
+    String? address, {
+    required int offset,
+    required int limit,
+  }) async {
     try {
-      var networkInfo = Storehouse.networkInfo;
+      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
       final request = auraTx.GetTxsEventRequest(
-        events: [
-          if (transactionType == AuraTransactionType.send)
-            "transfer.sender='$address'"
-          else if (transactionType == AuraTransactionType.recive)
-            "transfer.recipient='$address'"
-        ],
-        pagination: PageRequest(offset: 0.toInt64(), limit: 100.toInt64()),
+        events: ["transfer.sender='$address'", "transfer.recipient='$address'"],
+        pagination:
+            PageRequest(offset: offset.toInt64(), limit: limit.toInt64()),
       );
 
       final client = auraTx.ServiceClient(networkInfo.gRPCChannel,
@@ -150,8 +154,7 @@ class AuraWalletImpl extends AuraWallet {
       final GetTxsEventResponse response = await client.getTxsEvent(request);
 
       List<AuraTransaction> listData =
-          AuraWalletHelper.convertToAuraTransaction(
-              response.txResponses, transactionType);
+          AuraWalletHelper.convertToAuraTransaction(response.txResponses);
 
       return listData;
     } catch (e) {
@@ -166,7 +169,7 @@ class AuraWalletImpl extends AuraWallet {
   ///
   /// Returns the response from the smart contract as a string.
   @override
-  Future<String> makeInteractiveQuerySmartContract({
+  Future<String> makeQuerySmartContract({
     required String contractAddress,
     required Map<String, dynamic> query,
   }) async {
@@ -182,7 +185,7 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     try {
-      var networkInfo = Storehouse.networkInfo;
+      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
       List<int> queryData = jsonEncode(query).codeUnits;
 
       final cosMWasm.QueryClient client = cosMWasm.QueryClient(
@@ -225,16 +228,17 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     // Validate the fee.
-    if (fee != null && fee < 200) {
-      throw AuraInternalError(ErrorCode.InvalidFee, 'Min fee is 200');
+    if (fee != null && fee < Storehouse.configService.minFee) {
+      throw AuraInternalError(
+          ErrorCode.InvalidFee, 'Min fee is ${Storehouse.configService.minFee}');
     }
 
     // Get the denomination from the environment.
-    String denom = AuraWalletUtil.getDenom(environment);
+    String denom = Storehouse.configService.deNom;
 
     // Load the wallet passphrase.
     String? passPhrase =
-        await Storehouse.storage.readWalletPassPhrase(walletName: walletName);
+        await Storehouse.storage.getWalletPassPhrase(key: walletName);
 
     // Check if the passphrase is null.
     if (passPhrase == null) {
@@ -243,7 +247,8 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     // Derive the wallet from the passphrase.
-    final wallet = Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
+    final wallet = Wallet.derive(
+        passPhrase.split(' '), Storehouse.configService.networkInfo);
 
     // Create the message.
     final List<int> msg = jsonEncode(executeMessage).codeUnits;
@@ -261,7 +266,7 @@ class AuraWalletImpl extends AuraWallet {
 
     // Get the wallet address.
     String? bech32Address =
-        await Storehouse.storage.getWalletAddress(walletName: walletName);
+        await Storehouse.storage.getWalletAddress(key: walletName);
 
     // Create the execute contract message.
     final cosMWasm.MsgExecuteContract request = cosMWasm.MsgExecuteContract(
@@ -273,12 +278,12 @@ class AuraWalletImpl extends AuraWallet {
 
     // Create the fee.
     final Fee feeData = AuraWalletHelper.createFee(
-      amount: (fee ?? 200).toString(),
-      environment: environment,
-    );
+        amount: (fee ?? Storehouse.configService.minFee).toString(),
+        gasLimit: Storehouse.configService.gasLimit,
+        denom: denom);
 
     // Get the network info.
-    var networkInfo = Storehouse.networkInfo;
+    final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
 
     // Sign the transaction.
     Tx tx = await AuraWalletHelper.signTransaction(
@@ -291,19 +296,28 @@ class AuraWalletImpl extends AuraWallet {
     // Create the transaction sender.
     final txSender = TxSender.fromNetworkInfo(networkInfo);
 
-    // Broadcast the transaction.
-    final response = await txSender.broadcastTx(tx);
+    try {
+      // Broadcast the transaction.
+      final response = await txSender.broadcastTx(tx);
 
-    // Check if the transaction was successful.
-    if (response.isSuccessful) {
-      return response.txhash;
+      // Check if the transaction was successful.
+      if (response.isSuccessful) {
+        return response.txhash;
+      }
+
+      // If the transaction failed, throw an AuraInternalError with a specific error code and message.
+      throw AuraInternalError(
+        ErrorCode.TransactionBroadcastFailed,
+        'Broadcast transaction error\n${response.rawLog}',
+      );
+    } catch (e) {
+      if (e is GrpcError) {
+        throw AuraInternalError(
+            e.code, e.message ?? 'The grpc call had some error');
+      }
+
+      throw AuraInternalError(503, e.toString());
     }
-
-    // If the transaction failed, throw an AuraInternalError with a specific error code and message.
-    throw AuraInternalError(
-      ErrorCode.TransactionBroadcastFailed,
-      'Broadcast transaction error\n${response.rawLog}',
-    );
   }
 
   /// Retrieves the wallet passphrase from the local storage.
@@ -314,7 +328,7 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<String?> getWalletPassPhrase() async {
     try {
-      return Storehouse.storage.readWalletPassPhrase(walletName: walletName);
+      return Storehouse.storage.getWalletPassPhrase(key: walletName);
     } catch (e) {
       // Handle the error and throw an AuraInternalError with the appropriate error code and message.
       String message =
@@ -334,13 +348,13 @@ class AuraWalletImpl extends AuraWallet {
   ///
   /// Throws an [AuraInternalError] with a specific error code and message if any error occurs.
   @override
-  Future<Tx> makeTransaction({
+  Future<Tx> sendTransaction({
     required String toAddress,
     required String amount,
     required String fee,
     String? memo,
   }) async {
-    String denom = AuraWalletUtil.getDenom(environment);
+    String denom = Storehouse.configService.deNom;
 
     // Step #1: Create a message for the transaction.
     final MsgSend message = bank.MsgSend.create()
@@ -351,19 +365,23 @@ class AuraWalletImpl extends AuraWallet {
       ..amount = amount);
 
     // Step #2: Create the transaction fee.
-    final Fee feeData =
-        AuraWalletHelper.createFee(amount: fee, environment: environment);
+    final Fee feeData = AuraWalletHelper.createFee(
+      amount: fee,
+      gasLimit: Storehouse.configService.gasLimit,
+      denom: denom,
+    );
 
-    var networkInfo = Storehouse.networkInfo;
+    final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
 
     String? passPhrase =
-        await Storehouse.storage.readWalletPassPhrase(walletName: walletName);
+        await Storehouse.storage.getWalletPassPhrase(key: walletName);
 
     if (passPhrase == null) {
       // Handle the case where the passphrase is null and throw an AuraInternalError.
       throw AuraInternalError(ErrorCode.NullPassphrase, "Passphrase is null");
     }
-    final wallet = Wallet.derive(passPhrase.split(' '), Storehouse.networkInfo);
+    final wallet = Wallet.derive(
+        passPhrase.split(' '), Storehouse.configService.networkInfo);
 
     try {
       // Sign the transaction.
@@ -393,14 +411,14 @@ class AuraWalletImpl extends AuraWallet {
   /// Throws an [AuraInternalError] with a specific error code and message if any error occurs.
   @override
   Future<bool> verifyTxHash({required String txHash}) async {
-    String baseUrl = AuraWalletUtil.getBaseUrl(environment);
-    String chainId = AuraWalletUtil.getChainId(environment);
-
     try {
       HttpClient client = HttpClient();
 
-      final request = await client.getUrl(Uri.parse(
-          '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId'));
+      final request = await client.getUrl(
+        Uri.parse(
+          Storehouse.configService.verifyTransactionUrl(txHash),
+        ),
+      );
 
       final HttpClientResponse response = await request.close();
 
@@ -422,7 +440,7 @@ class AuraWalletImpl extends AuraWallet {
           Map<String, dynamic>.from(trans[0]['tx_response']);
 
       // Check if the transaction code is "0" (indicating success).
-      return tran['code'] == "0";
+      return tran['code'] == successFullTransactionCode;
     } catch (e) {
       // Handle any error that occurs during verification.
       String errorMessage =

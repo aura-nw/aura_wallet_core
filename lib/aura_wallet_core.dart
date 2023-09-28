@@ -37,27 +37,27 @@ abstract class AuraWalletCore {
   /// Restores a HD wallet from a passphrase.
   ///
   /// [passPhrase]: The passphrase used to restore the wallet.
-  /// [walletName]: The name of the wallet (default is [CONST_DEFAULT_WALLET_NAME]).
+  /// [walletName]: The name of the wallet (default is [defaultWalletName]).
   ///
   /// Returns an [AuraWallet] instance.
   Future<AuraWallet> restoreHDWallet({
     required String passPhrase,
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   });
 
   /// Loads a previously stored wallet.
   ///
-  /// [walletName]: The name of the wallet to load (default is [CONST_DEFAULT_WALLET_NAME]).
+  /// [walletName]: The name of the wallet to load (default is [defaultWalletName]).
   ///
   /// Returns an [AuraWallet] instance or `null` if no wallet is found.
   Future<AuraWallet?> loadStoredWallet({
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   });
 
   /// Removes a wallet from storage.
   ///
-  /// [walletName]: The name of the wallet to remove (default is [CONST_DEFAULT_WALLET_NAME]).
+  /// [walletName]: The name of the wallet to remove (default is [defaultWalletName]).
   Future<void> removeWallet({
-    String walletName = CONST_DEFAULT_WALLET_NAME,
+    String walletName = defaultWalletName,
   });
 }

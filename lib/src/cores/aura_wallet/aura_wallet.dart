@@ -1,17 +1,14 @@
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
 
 /// Abstract class representing an Aura Wallet.
 abstract class AuraWallet {
   final String walletName;
   final String bech32Address;
-  final AuraEnvironment environment;
 
   const AuraWallet({
     required this.walletName,
     required this.bech32Address,
-    required this.environment,
   });
 
   /// Create a new transaction and sign it.
@@ -21,7 +18,7 @@ abstract class AuraWallet {
   ///   - [amount]: The amount to send.
   ///   - [fee]: The transaction fee.
   ///   - [memo]: An optional memo to include in the transaction.
-  Future<Tx> makeTransaction({
+  Future<Tx> sendTransaction({
     required String toAddress,
     required String amount,
     required String fee,
@@ -38,14 +35,14 @@ abstract class AuraWallet {
   Future<String> checkWalletBalance();
 
   /// Get a list of transactions associated with the wallet's address.
-  Future<List<AuraTransaction>> checkWalletHistory();
+  Future<List<AuraTransaction>> checkWalletHistory({int offset = 0 , int limit = 100});
 
   /// Return response data corresponding to a smart contract query.
   ///
   /// Parameters:
   ///   - [contractAddress]: The address of the smart contract.
   ///   - [query]: The query parameters.
-  Future<String> makeInteractiveQuerySmartContract({
+  Future<String> makeQuerySmartContract({
     required String contractAddress,
     required Map<String, dynamic> query,
   });
