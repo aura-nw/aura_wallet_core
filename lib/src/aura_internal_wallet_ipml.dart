@@ -139,7 +139,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         throw AuraInternalError(
             ErrorCode.PlatformError, '[${e.code}] ${e.message}');
       } else {
-        throw AuraInternalError(ErrorCode.WalletLoadingError, e.toString());
+        throw AuraInternalError(ErrorCode.DeleteWalletError, e.toString());
       }
     }
   }
