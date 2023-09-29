@@ -1,3 +1,9 @@
 // ignore_for_file: constant_identifier_names
 
-const CONST_DEFAULT_WALLET_NAME = "AuraWallet";
+const defaultWalletName = "AuraWallet";
+
+const defaultQueryOffset = 0;
+
+const defaultQueryLimit = 100;
+
+const successFullTransactionCode = "0";
