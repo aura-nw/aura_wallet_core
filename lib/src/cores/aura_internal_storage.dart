@@ -58,11 +58,8 @@ class AuraInternalStorage {
     await _storage.write(key: walletAddress, value: passphrase);
   }
 
-  Future<String?> readWalletPassPhrase({required String walletName}) async {
-    String? walletAddress = await _storage.read(
-        key: walletName,
-        aOptions: _getNonSecureAndroidOptions,
-        iOptions: _getNonSecureIosOptions);
+  Future<String?> getWalletPassPhrase({required String walletName}) async {
+    String? walletAddress = await getWalletAddress(walletName: walletName);
     if (walletAddress == null) {
       return null;
     }
