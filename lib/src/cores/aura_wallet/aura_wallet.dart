@@ -1,4 +1,6 @@
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
+import 'package:aura_wallet_core/src/constants/aura_constants.dart';
+import 'package:aura_wallet_core/enum/order_enum.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
 
 /// Abstract class representing an Aura Wallet.
@@ -35,7 +37,11 @@ abstract class AuraWallet {
   Future<String> checkWalletBalance();
 
   /// Get a list of transactions associated with the wallet's address.
-  Future<List<AuraTransaction>> checkWalletHistory({int offset = 0 , int limit = 100});
+  /// Parameters:
+  ///   - [offset] : The transaction offset.
+  ///   - [limit] : Maximum transaction page.
+  ///   - [orderBy] : The order by parameters.
+  Future<List<AuraTransaction>> getWalletHistory({int offset = defaultQueryOffset , int limit = defaultQueryLimit, AuraTransactionOrderByType orderBy = AuraTransactionOrderByType.ORDER_BY_ASC});
 
   /// Return response data corresponding to a smart contract query.
   ///

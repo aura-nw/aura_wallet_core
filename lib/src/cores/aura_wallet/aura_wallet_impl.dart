@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
+import 'package:aura_wallet_core/enum/order_enum.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
 import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
@@ -48,10 +49,10 @@ class AuraWalletImpl extends AuraWallet {
       // Handle any exceptions that might occur during the transaction submission.
 
       if (e is GrpcError) {
-        throw AuraInternalError(e.code, e.message ?? 'Unknown Error');
+        throw AuraInternalError(e.code, 'Submit transaction error: ${e.message}');
       }
 
-      throw AuraInternalError(ErrorCode.SubmitTransactionError, e.toString());
+      throw AuraInternalError(ErrorCode.SubmitTransactionError, 'Submit transaction error: ${e.toString()}');
     }
   }
 
@@ -79,8 +80,11 @@ class AuraWalletImpl extends AuraWallet {
       return response.balance.amount;
     } catch (e) {
       // Handle any exceptions that might occur while fetching the balance.
-      throw AuraInternalError(
-          ErrorCode.FetchBalanceError, 'Error fetching wallet balance: ${e.toString()}');
+      if(e is GrpcError){
+        throw AuraInternalError(e.code, 'Error fetching wallet balance: ${e.message}');
+      }
+      throw AuraInternalError(ErrorCode.FetchBalanceError,
+          'Error fetching wallet balance: ${e.toString()}');
     }
   }
 
@@ -88,64 +92,59 @@ class AuraWalletImpl extends AuraWallet {
   ///
   /// - [offset] : Offset transaction
   /// - [limit] : Limit page of response
+  /// - [orderBy] : Oder by
   ///
   /// Returns a list of [AuraTransaction] objects representing the transaction history.
   ///
   /// Throws an [AuraInternalError] if there's an error while fetching the transaction history.
   @override
-  Future<List<AuraTransaction>> checkWalletHistory(
-      {int offset = defaultQueryOffset, int limit = defaultQueryLimit}) async {
+  Future<List<AuraTransaction>> getWalletHistory({
+    int offset = defaultQueryOffset,
+    int limit = defaultQueryLimit,
+    AuraTransactionOrderByType orderBy = AuraTransactionOrderByType.ORDER_BY_ASC,
+  }) async {
     try {
       String? bech32Address =
           await Storehouse.storage.getWalletAddress(key: walletName);
 
-      List<AuraTransaction>? listTransaction =
+      List<AuraTransaction> listTransaction =
           await _getListTransactionByAddress(
         bech32Address,
         offset: offset,
         limit: limit,
+        orderBy: orderBy.toOrderBy,
       );
 
-      List<AuraTransaction> listAllTransaction = [];
-      listAllTransaction.addAll(listTransaction ?? []);
-
-      listAllTransaction.sort((a, b) {
-        DateTime? aDate = DateTime.tryParse(a.timestamp);
-        DateTime? bDate = DateTime.tryParse(b.timestamp);
-        if (aDate == null || bDate == null) {
-          return 0; // Skip
-        }
-
-        return aDate.compareTo(bDate);
-      });
-
-      return listAllTransaction;
+      return listTransaction;
     } catch (e) {
       // Handle any exceptions that might occur while fetching the transaction history.
-      throw AuraInternalError(
-          ErrorCode.FetchWalletHistoryError, 'Error fetching wallet history: ${e.toString()}');
+      if(e is GrpcError){
+        throw AuraInternalError(e.code, 'Error fetching wallet history: ${e.message}');
+      }
+      throw AuraInternalError(ErrorCode.FetchWalletHistoryError,
+          'Error fetching wallet history: ${e.toString()}');
     }
   }
 
-  /// Retrieves a list of transactions based on the provided [address] and [transactionType].
-  ///
-  /// If [transactionType] is [AuraTransactionType.send], it fetches transactions sent from the [address].
-  /// If [transactionType] is [AuraTransactionType.recive], it fetches transactions received by the [address].
+  /// Retrieves a list of transactions based on the provided [address]
   ///
   /// Returns a list of [AuraTransaction] objects representing the transactions.
   ///
   /// Returns `null` if there's an error or no transactions are found.
-  Future<List<AuraTransaction>?> _getListTransactionByAddress(
+  Future<List<AuraTransaction>> _getListTransactionByAddress(
     String? address, {
     required int offset,
     required int limit,
+    required auraTx.OrderBy orderBy,
   }) async {
-    try {
       final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
       final request = auraTx.GetTxsEventRequest(
         events: ["transfer.sender='$address'", "transfer.recipient='$address'"],
-        pagination:
-            PageRequest(offset: offset.toInt64(), limit: limit.toInt64()),
+        pagination: PageRequest(
+          offset: offset.toInt64(),
+          limit: limit.toInt64(),
+        ),
+        orderBy: orderBy,
       );
 
       final client = auraTx.ServiceClient(networkInfo.gRPCChannel,
@@ -157,10 +156,6 @@ class AuraWalletImpl extends AuraWallet {
           AuraWalletHelper.convertToAuraTransaction(response.txResponses);
 
       return listData;
-    } catch (e) {
-      // Handle any exceptions that might occur while fetching transactions.
-      return null;
-    }
   }
 
   /// Executes an interactive query on a smart contract located at [contractAddress] with the provided [query].
@@ -205,6 +200,9 @@ class AuraWalletImpl extends AuraWallet {
       return String.fromCharCodes(response.data);
     } catch (e) {
       // Handle any exceptions that might occur during the query.
+      if(e is GrpcError){
+        throw AuraInternalError(e.code, 'Query failed: ${e.message}');
+      }
       throw AuraInternalError(ErrorCode.QueryFailed, 'Query failed: $e');
     }
   }
@@ -228,9 +226,9 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     // Validate the fee.
-    if (fee != null && fee < Storehouse.configService.minFee) {
-      throw AuraInternalError(
-          ErrorCode.InvalidFee, 'Min fee is ${Storehouse.configService.minFee}');
+    if (fee != null && fee < Storehouse.configOption.minFee) {
+      throw AuraInternalError(ErrorCode.InvalidFee,
+          'Min fee is ${Storehouse.configOption.minFee}');
     }
 
     // Get the denomination from the environment.
@@ -278,8 +276,8 @@ class AuraWalletImpl extends AuraWallet {
 
     // Create the fee.
     final Fee feeData = AuraWalletHelper.createFee(
-        amount: (fee ?? Storehouse.configService.minFee).toString(),
-        gasLimit: Storehouse.configService.gasLimit,
+        amount: (fee ?? Storehouse.configOption.minFee).toString(),
+        gasLimit: Storehouse.configOption.gasLimit,
         denom: denom);
 
     // Get the network info.
@@ -313,10 +311,10 @@ class AuraWalletImpl extends AuraWallet {
     } catch (e) {
       if (e is GrpcError) {
         throw AuraInternalError(
-            e.code, e.message ?? 'The grpc call had some error');
+            e.code, 'Execute smart contract error: ${e.message}');
       }
 
-      throw AuraInternalError(ErrorCode.ExecuteContractError, e.toString());
+      throw AuraInternalError(ErrorCode.ExecuteContractError, 'Execute smart contract error: ${e.toString()}');
     }
   }
 
@@ -367,7 +365,7 @@ class AuraWalletImpl extends AuraWallet {
     // Step #2: Create the transaction fee.
     final Fee feeData = AuraWalletHelper.createFee(
       amount: fee,
-      gasLimit: Storehouse.configService.gasLimit,
+      gasLimit: Storehouse.configOption.gasLimit,
       denom: denom,
     );
 
@@ -396,6 +394,10 @@ class AuraWalletImpl extends AuraWallet {
       return signedTx;
     } catch (e) {
       // Handle any error that occurs during transaction signing.
+      if (e is GrpcError) {
+        throw AuraInternalError(
+            e.code, 'Send transaction error: ${e.message}');
+      }
       String errorMessage =
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
       throw AuraInternalError(ErrorCode.TransactionSigningError, errorMessage);

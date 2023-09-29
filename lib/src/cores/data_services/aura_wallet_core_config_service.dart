@@ -44,12 +44,6 @@ abstract class IAuraWalletCoreConfigService {
   // Get decimal from configuration
   int get decimal;
 
-  // Get gasLimit from configuration
-  int get gasLimit;
-
-  // Get minFee from configuration
-  int get minFee;
-
   // Get network info from configuration
   NetworkInfo get networkInfo;
 }
@@ -113,9 +107,6 @@ class AuraWalletCoreConfigService implements IAuraWalletCoreConfigService {
   String get lcdHost => _netWorkInfo['lcdHost'];
 
   @override
-  int get gasLimit => int.parse(env['GAS_LIMIT']!);
-
-  @override
   NetworkInfo get networkInfo => NetworkInfo(
         bech32Hrp: becH32Config,
         lcdInfo: LCDInfo(host: lcdHost),
@@ -127,7 +118,4 @@ class AuraWalletCoreConfigService implements IAuraWalletCoreConfigService {
 
   @override
   int get grpcPort => int.parse(_netWorkInfo['grpcPort']);
-
-  @override
-  int get minFee => int.parse(env['MIN_FEE']!);
 }
