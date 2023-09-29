@@ -70,20 +70,8 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     String walletName = defaultWalletName,
   }) async {
     try {
-      // Check if the provided passphrase is a valid mnemonic.
-      bool isMnemonic = AuraWalletHelper.checkMnemonic(mnemonic: passPhrase);
-
-      // If it's a valid mnemonic, throw an error.
-      if (!isMnemonic) {
-        throw AuraInternalError(
-          ErrorCode.InvalidPassphrase,
-          'Invalid passphrase provided.',
-        );
-      }
-
       // Derive a wallet from the provided passphrase.
-      final Wallet wallet = Wallet.derive(
-          passPhrase.split(' '), Storehouse.configService.networkInfo);
+      final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
 
       // Save the wallet details to storage.
       await Storehouse.storage.saveWalletToStorage(
@@ -98,6 +86,9 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         bech32Address: wallet.bech32Address,
       );
     } catch (e) {
+      if (e is AuraInternalError) {
+        rethrow;
+      }
       // Handle any exceptions that might occur during wallet restoration.
       throw AuraInternalError(
         ErrorCode.WalletRestorationError,
@@ -116,14 +107,8 @@ class AuraWalletCoreImpl implements AuraWalletCore {
       String? passPhrase =
           await Storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
-      // If the passphrase is null, return null (no wallet found).
-      if (passPhrase == null) {
-        return null;
-      }
-
-      // Derive a wallet from the stored passphrase.
-      final Wallet wallet = Wallet.derive(
-          passPhrase.split(' '), Storehouse.configService.networkInfo);
+      // Derive a wallet from the provided passphrase.
+      final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
 
       // Create and return an AuraWalletImpl instance with the loaded wallet details.
       return AuraWalletImpl(
@@ -131,20 +116,14 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         bech32Address: wallet.bech32Address,
       );
     } catch (e) {
-      // Handle any exceptions that might occur during wallet loading.
-      if (e is PlatformException) {
-        // If the exception is a PlatformException, create an AuraInternalError with a specific error code and message.
-        throw AuraInternalError(
-          ErrorCode.PlatformError,
-          '[${e.code}] ${e.message}',
-        );
-      } else {
-        // If it's any other type of exception, create an AuraInternalError with a different error code and the exception message.
-        throw AuraInternalError(
-          ErrorCode.WalletLoadingError,
-          e.toString(),
-        );
+      if (e is AuraInternalError) {
+        rethrow;
       }
+      // Handle any exceptions that might occur during wallet restoration.
+      throw AuraInternalError(
+        ErrorCode.WalletLoadingError,
+        e.toString(),
+      );
     }
   }
 
