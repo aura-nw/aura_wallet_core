@@ -24,6 +24,7 @@ abstract class AuraWallet {
     required String toAddress,
     required String amount,
     required String fee,
+    required int gasLimit,
     String? memo,
   });
 
@@ -41,7 +42,11 @@ abstract class AuraWallet {
   ///   - [offset] : The transaction offset.
   ///   - [limit] : Maximum transaction page.
   ///   - [orderBy] : The order by parameters.
-  Future<List<AuraTransaction>> getWalletHistory({int offset = defaultQueryOffset , int limit = defaultQueryLimit, AuraTransactionOrderByType orderBy = AuraTransactionOrderByType.ORDER_BY_ASC});
+  Future<List<AuraTransaction>> getWalletHistory(
+      {int offset = defaultQueryOffset,
+      int limit = defaultQueryLimit,
+      AuraTransactionOrderByType orderBy =
+          AuraTransactionOrderByType.ORDER_BY_ASC});
 
   /// Return response data corresponding to a smart contract query.
   ///
@@ -63,8 +68,9 @@ abstract class AuraWallet {
   Future<String> makeInteractiveWriteSmartContract({
     required String contractAddress,
     required Map<String, dynamic> executeMessage,
+    required int gasLimit,
+    required int fee,
     List<int>? funds,
-    int? fee,
   });
 
   /// Verify the status of contract execution from a TxHash.

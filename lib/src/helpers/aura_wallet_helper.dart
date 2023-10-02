@@ -3,9 +3,16 @@ import 'dart:typed_data';
 import 'package:alan/alan.dart';
 import 'package:alan/proto/tendermint/abci/types.pb.dart';
 import 'package:aura_wallet_core/config_options/enviroment_options.dart';
+import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
+import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';
+import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
+import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
 import 'package:aura_wallet_core/src/cores/utils/aura_wallet_utils.dart';
+import 'package:flutter/services.dart';
 import 'package:protobuf/protobuf.dart' as proto;
+
+import '../cores/aura_wallet/aura_wallet_impl.dart';
 
 /// The `AuraWalletHelper` class provides utility methods for various tasks
 /// related to the Aura Wallet Core. These methods include converting
@@ -20,7 +27,8 @@ class AuraWalletHelper {
   /// Returns:
   ///   - A list of `AuraTransaction` objects.
   static List<AuraTransaction> convertToAuraTransaction(
-      List<TxResponse> txResponse,) {
+    List<TxResponse> txResponse,
+  ) {
     List<AuraTransaction> listResult = txResponse.map((e) {
       String timeStamp = e.timestamp;
       String recipient = '';
@@ -75,7 +83,7 @@ class AuraWalletHelper {
   /// Returns:
   ///   - A `Fee` object representing the transaction fee.
   static Fee createFee(
-      {required String amount, required int gasLimit , required String denom}) {
+      {required String amount, required int gasLimit, required String denom}) {
     // Compose the transaction fees
     final fee = Fee();
     fee.gasLimit = gasLimit.toInt64();
@@ -124,5 +132,40 @@ class AuraWalletHelper {
     Bip32EccCurve ecc = Bip32EccCurve();
 
     return privateKey.length == 32 && ecc.isPrivate(privateKey);
+  }
+
+  static Future<Wallet> deriveWallet(String? passPhrase) async {
+    try {
+      // If the passphrase is null, return null (no wallet found).
+      if (passPhrase == null ||
+          !AuraWalletHelper.checkMnemonic(mnemonic: passPhrase)) {
+        throw AuraInternalError(
+          ErrorCode.InvalidPassphrase,
+          'Invalid passphrase provided.',
+        );
+      }
+
+      // Derive a wallet from the stored passphrase.
+      final Wallet wallet = Wallet.derive(
+          passPhrase.split(' '), Storehouse.configService.networkInfo);
+
+      // Create and return an AuraWalletImpl instance with the loaded wallet details.
+      return wallet;
+    } catch (e) {
+      // Handle any exceptions that might occur during wallet loading.
+      if (e is PlatformException) {
+        // If the exception is a PlatformException, create an AuraInternalError with a specific error code and message.
+        throw AuraInternalError(
+          ErrorCode.PlatformError,
+          '[${e.code}] ${e.message}',
+        );
+      } else {
+        // If it's any other type of exception, create an AuraInternalError with a different error code and the exception message.
+        throw AuraInternalError(
+          ErrorCode.WalletLoadingError,
+          e.toString(),
+        );
+      }
+    }
   }
 }

@@ -15,5 +15,5 @@ class Storehouse {
   static late ConfigOption configOption;
 
   // Config service contains static information.
-  static late IAuraWalletCoreConfigService configService;
+  static late AuraWalletCoreConfigService configService;
 }

@@ -1,112 +1,69 @@
 import 'dart:convert';
-
-import 'package:alan/alan.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:aura_wallet_core/config_options/enviroment_options.dart';
+import 'package:alan/alan.dart';
 
-/// [IAuraWalletCoreConfigServiceE] is extension of [IAuraWalletCoreConfigService]
-extension IAuraWalletCoreConfigServiceE on IAuraWalletCoreConfigService {
-  // This method return to a string as verify txHash url
-  String verifyTransactionUrl(String txHash) {
-    return '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId';
-  }
-}
-
-/// The [IAuraWalletCoreConfigService]` is interface to define base static config from Aura SDK Core
-/// Providing access to essential configuration elements within the Aura Wallet Core.
-abstract class IAuraWalletCoreConfigService {
-
-  // This method must call when SDK initialized
-  // It will detect to load config from env file corresponding
-  Future<void> init(AuraEnvironment environment);
-
-  // Get becH32Config from configuration
-  String get becH32Config;
-
-  // Get chainId from configuration
-  String get chainId;
-
-  // Get baseUrl from configuration
-  String get baseUrl;
-
-  // Get lcdHost from configuration
-  String get lcdHost;
-
-  // Get grpcHost from configuration
-  String get grpcHost;
-
-  // Get grpcPort from configuration
-  int get grpcPort;
-
-  // Get deNom from configuration
-  String get deNom;
-
-  // Get decimal from configuration
-  int get decimal;
-
-  // Get network info from configuration
-  NetworkInfo get networkInfo;
-}
-
-
-/// The [AuraWalletCoreConfigService] class is implementation [IAuraWalletCoreConfigService] interface used for SDK
-class AuraWalletCoreConfigService implements IAuraWalletCoreConfigService {
+/// The [AuraWalletCoreConfigService] class provides configuration settings for the Aura Wallet Core SDK.
+class AuraWalletCoreConfigService {
   const AuraWalletCoreConfigService();
 
+  // Access environment variables using Flutter Dotenv
   Map<String, String> get env => dotenv.env;
 
+  // Decode the CHAIN_INFO environment variable into a map
   Map<String, dynamic> get _chainInfo => jsonDecode(
         env['CHAIN_INFO']!,
       );
 
+  // Decode the NET_WORK_INFO environment variable into a map
   Map<String, dynamic> get _netWorkInfo => jsonDecode(
         env['NET_WORK_INFO']!,
       );
 
+  // Access the 'coin' information from the chain configuration
   Map<String, dynamic> get _coin => _chainInfo['coin'];
 
-  @override
+  /// Gets the base URL for API requests.
   String get baseUrl => _netWorkInfo['baseUrl'];
 
-  @override
+  /// Gets the Bech32 configuration for the chain.
   String get becH32Config => _netWorkInfo['bech32Config'];
 
-  @override
+  /// Gets the chain ID.
   String get chainId => _netWorkInfo['chainId'];
 
-  @override
+  /// Gets the denomination of the coin.
   String get deNom => _coin['denom'];
 
-  @override
+  /// Gets the decimal precision of the coin.
   int get decimal => _coin['decimal'];
 
-  @override
+  /// Gets the gRPC host for network communication.
   String get grpcHost => _netWorkInfo['grpcHost'];
 
-  @override
+  /// Initializes the configuration based on the provided environment.
+  ///
+  /// [environment]: The Aura environment (testNet, euphoria, mainNet).
   Future<void> init(AuraEnvironment environment) async {
     const String baseAssetUri = 'packages/aura_wallet_core/assets/';
 
     switch (environment) {
       case AuraEnvironment.testNet:
-        await dotenv.load(
-            fileName: '$baseAssetUri.env.testnet');
+        await dotenv.load(fileName: '$baseAssetUri.env.testnet');
         break;
       case AuraEnvironment.euphoria:
-        await dotenv.load(
-            fileName: '$baseAssetUri.env.euphoria');
+        await dotenv.load(fileName: '$baseAssetUri.env.euphoria');
         break;
       case AuraEnvironment.mainNet:
-        await dotenv.load(
-            fileName: '$baseAssetUri.env.mainnet');
+        await dotenv.load(fileName: '$baseAssetUri.env.mainnet');
         break;
     }
   }
 
-  @override
+  /// Gets the LCD host for network communication.
   String get lcdHost => _netWorkInfo['lcdHost'];
 
-  @override
+  /// Gets network information including Bech32 configuration, LCD and gRPC hosts, and gRPC port.
   NetworkInfo get networkInfo => NetworkInfo(
         bech32Hrp: becH32Config,
         lcdInfo: LCDInfo(host: lcdHost),
@@ -116,6 +73,11 @@ class AuraWalletCoreConfigService implements IAuraWalletCoreConfigService {
         ),
       );
 
-  @override
+  /// Gets the gRPC port for network communication.
   int get grpcPort => int.parse(_netWorkInfo['grpcPort']);
+
+  /// Generates a verification transaction URL based on the provided transaction hash (txHash).
+  String verifyTransactionUrl(String txHash) {
+    return '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId';
+  }
 }

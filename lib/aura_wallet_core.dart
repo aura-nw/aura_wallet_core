@@ -7,7 +7,6 @@ import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_ipml.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
-
 /// An abstract class representing the core functionality of an Aura wallet.
 abstract class AuraWalletCore {
   /// Factory constructor for creating an instance of [AuraWalletCore].
@@ -16,8 +15,6 @@ abstract class AuraWalletCore {
     BiometricOptions? biometricOptions,
     ConfigOption configOption = const ConfigOption(
       isEnableLog: true,
-      gasLimit: defaultGasLimit,
-      minFee: defaultMinFee,
     ),
   }) {
     return _instance(environment, biometricOptions, configOption);

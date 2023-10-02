@@ -60,4 +60,7 @@ class ErrorCode {
 
   // Error code for cases user execute smart contract error
   static int ExecuteContractError = 1020;
+
+  // Error code for cases user delete wallet error
+  static int DeleteWalletError = 1021;
 }
