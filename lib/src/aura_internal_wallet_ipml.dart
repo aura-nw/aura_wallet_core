@@ -70,20 +70,17 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     String walletName = defaultWalletName,
   }) async {
     try {
-      // Derive a wallet from the provided passphrase.
-      final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
-
-      // Save the wallet details to storage.
-      await Storehouse.storage.saveWalletToStorage(
-        walletName: walletName,
-        passphrase: passPhrase,
-        walletAddress: wallet.bech32Address,
-      );
-
-      // Create and return an AuraWalletImpl instance with the restored wallet details.
-      return AuraWalletImpl(
-        walletName: walletName,
-        bech32Address: wallet.bech32Address,
+      return _restoreWallet(
+        passPhrase,
+        (wallet) async {
+          // Save the wallet details to storage.
+          await Storehouse.storage.saveWalletToStorage(
+            walletName: walletName,
+            passphrase: passPhrase,
+            walletAddress: wallet.bech32Address,
+          );
+        },
+        walletName,
       );
     } catch (e) {
       if (e is AuraInternalError) {
@@ -107,14 +104,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
       String? passPhrase =
           await Storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
-      // Derive a wallet from the provided passphrase.
-      final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
-
-      // Create and return an AuraWalletImpl instance with the loaded wallet details.
-      return AuraWalletImpl(
-        walletName: walletName,
-        bech32Address: wallet.bech32Address,
-      );
+      return _restoreWallet(passPhrase, null, walletName);
     } catch (e) {
       if (e is AuraInternalError) {
         rethrow;
@@ -142,5 +132,23 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         throw AuraInternalError(ErrorCode.DeleteWalletError, e.toString());
       }
     }
+  }
+
+  Future<AuraWallet> _restoreWallet(
+    String? passPhrase, [
+    Future<void> Function(Wallet)? callBack,
+    String walletName = defaultWalletName,
+  ]) async {
+// Derive a wallet from the provided passphrase.
+    final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
+
+    // Register callback before return Wallet
+    await callBack?.call(wallet);
+
+    // Create and return an AuraWalletImpl instance with the restored wallet details.
+    return AuraWalletImpl(
+      walletName: walletName,
+      bech32Address: wallet.bech32Address,
+    );
   }
 }
