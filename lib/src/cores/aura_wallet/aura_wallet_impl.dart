@@ -6,7 +6,6 @@ import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 import 'package:aura_wallet_core/enum/order_enum.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
-import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
@@ -21,13 +20,30 @@ import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
 import 'package:grpc/grpc.dart';
 
 class AuraWalletImpl extends AuraWallet {
-  const AuraWalletImpl({
+  AuraWalletImpl({
     required String walletName,
     required String bech32Address,
   }) : super(
           walletName: walletName,
           bech32Address: bech32Address,
         );
+
+  /// Create client
+  final HttpClient _httpClient = HttpClient();
+  final auraTx.ServiceClient _txServiceClient = auraTx.ServiceClient(
+    Storehouse.configService.networkInfo.gRPCChannel,
+    interceptors: [LogInter()],
+  );
+  final bank.QueryClient _bankQueryClient = bank.QueryClient(
+    Storehouse.configService.networkInfo.gRPCChannel,
+    interceptors: [LogInter()],
+  );
+  final cosMWasm.QueryClient _cosWasmQueryClient = cosMWasm.QueryClient(
+    Storehouse.configService.networkInfo.gRPCChannel,
+    interceptors: [LogInter()],
+  );
+
+  ///
 
   /// Submits a signed transaction to the blockchain network.
   ///
@@ -72,12 +88,8 @@ class AuraWalletImpl extends AuraWallet {
 
       final req =
           bank.QueryBalanceRequest(address: bech32Address, denom: denom);
-      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
 
-      final client =
-          bank.QueryClient(networkInfo.gRPCChannel, interceptors: [LogInter()]);
-
-      final response = await client.balance(req);
+      final response = await _bankQueryClient.balance(req);
 
       return response.balance.amount;
     } catch (e) {
@@ -142,7 +154,6 @@ class AuraWalletImpl extends AuraWallet {
     required int limit,
     required auraTx.OrderBy orderBy,
   }) async {
-    final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
     final request = auraTx.GetTxsEventRequest(
       events: ["transfer.sender='$address'", "transfer.recipient='$address'"],
       pagination: PageRequest(
@@ -152,10 +163,8 @@ class AuraWalletImpl extends AuraWallet {
       orderBy: orderBy,
     );
 
-    final client = auraTx.ServiceClient(networkInfo.gRPCChannel,
-        interceptors: [LogInter()]);
-
-    final GetTxsEventResponse response = await client.getTxsEvent(request);
+    final GetTxsEventResponse response =
+        await _txServiceClient.getTxsEvent(request);
 
     List<AuraTransaction> listData =
         AuraWalletHelper.convertToAuraTransaction(response.txResponses);
@@ -185,13 +194,7 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     try {
-      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
       List<int> queryData = jsonEncode(query).codeUnits;
-
-      final cosMWasm.QueryClient client = cosMWasm.QueryClient(
-        networkInfo.gRPCChannel,
-        interceptors: [LogInter()],
-      );
 
       final cosMWasm.QuerySmartContractStateRequest request =
           cosMWasm.QuerySmartContractStateRequest(
@@ -200,7 +203,7 @@ class AuraWalletImpl extends AuraWallet {
       );
 
       final cosMWasm.QuerySmartContractStateResponse response =
-          await client.smartContractState(request);
+          await _cosWasmQueryClient.smartContractState(request);
 
       return String.fromCharCodes(response.data);
     } catch (e) {
@@ -413,9 +416,7 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<bool> verifyTxHash({required String txHash}) async {
     try {
-      HttpClient client = HttpClient();
-
-      final request = await client.getUrl(
+      final request = await _httpClient.getUrl(
         Uri.parse(
           Storehouse.configService.verifyTransactionUrl(txHash),
         ),
@@ -425,7 +426,7 @@ class AuraWalletImpl extends AuraWallet {
 
       final String data =
           await (response.transform(utf8.decoder).join()).whenComplete(
-        () => client.close(),
+        () => _httpClient.close(),
       );
 
       List<Map<String, dynamic>> trans =
