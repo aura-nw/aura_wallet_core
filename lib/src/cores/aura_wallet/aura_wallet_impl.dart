@@ -20,28 +20,34 @@ import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
 import 'package:grpc/grpc.dart';
 
 class AuraWalletImpl extends AuraWallet {
+  final HttpClient _httpClient = HttpClient();
+  final Storehouse storehouse;
+  late final auraTx.ServiceClient _txServiceClient;
+  late final bank.QueryClient _bankQueryClient;
+  late final cosMWasm.QueryClient _cosWasmQueryClient;
+
   AuraWalletImpl({
+    required this.storehouse,
     required String walletName,
     required String bech32Address,
   }) : super(
           walletName: walletName,
           bech32Address: bech32Address,
-        );
+        ) {
+    _txServiceClient = auraTx.ServiceClient(
+      storehouse.configService.networkInfo.gRPCChannel,
+      interceptors: [LogInter(storehouse)],
+    );
 
-  /// Create client
-  final HttpClient _httpClient = HttpClient();
-  final auraTx.ServiceClient _txServiceClient = auraTx.ServiceClient(
-    Storehouse.configService.networkInfo.gRPCChannel,
-    interceptors: [LogInter()],
-  );
-  final bank.QueryClient _bankQueryClient = bank.QueryClient(
-    Storehouse.configService.networkInfo.gRPCChannel,
-    interceptors: [LogInter()],
-  );
-  final cosMWasm.QueryClient _cosWasmQueryClient = cosMWasm.QueryClient(
-    Storehouse.configService.networkInfo.gRPCChannel,
-    interceptors: [LogInter()],
-  );
+    _bankQueryClient = bank.QueryClient(
+      storehouse.configService.networkInfo.gRPCChannel,
+      interceptors: [LogInter(storehouse)],
+    );
+    _cosWasmQueryClient = cosMWasm.QueryClient(
+      storehouse.configService.networkInfo.gRPCChannel,
+      interceptors: [LogInter(storehouse)],
+    );
+  }
 
   ///
 
@@ -56,7 +62,7 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<bool> submitTransaction({required Tx signedTransaction}) async {
     try {
-      final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
+      final NetworkInfo networkInfo = storehouse.configService.networkInfo;
       final txSender = TxSender.fromNetworkInfo(networkInfo);
       final response = await txSender.broadcastTx(signedTransaction);
 
@@ -82,9 +88,9 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<String> checkWalletBalance() async {
     try {
-      String denom = Storehouse.configService.deNom;
+      String denom = storehouse.configService.deNom;
       String? bech32Address =
-          await Storehouse.storage.getWalletAddress(walletName: walletName);
+          await storehouse.storage.getWalletAddress(walletName: walletName);
 
       final req =
           bank.QueryBalanceRequest(address: bech32Address, denom: denom);
@@ -121,7 +127,7 @@ class AuraWalletImpl extends AuraWallet {
   }) async {
     try {
       String? bech32Address =
-          await Storehouse.storage.getWalletAddress(walletName: walletName);
+          await storehouse.storage.getWalletAddress(walletName: walletName);
 
       List<AuraTransaction> listTransaction =
           await _getListTransactionByAddress(
@@ -235,11 +241,11 @@ class AuraWalletImpl extends AuraWallet {
     }
 
     // Get the denomination from the environment.
-    String denom = Storehouse.configService.deNom;
+    String denom = storehouse.configService.deNom;
 
     // Load the wallet passphrase.
     String? passPhrase =
-        await Storehouse.storage.getWalletPassPhrase(walletName: walletName);
+        await storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
     // Check if the passphrase is null.
     if (passPhrase == null) {
@@ -249,7 +255,7 @@ class AuraWalletImpl extends AuraWallet {
 
     // Derive the wallet from the passphrase.
     final wallet = Wallet.derive(
-        passPhrase.split(' '), Storehouse.configService.networkInfo);
+        passPhrase.split(' '), storehouse.configService.networkInfo);
 
     // Create the message.
     final List<int> msg = jsonEncode(executeMessage).codeUnits;
@@ -267,7 +273,7 @@ class AuraWalletImpl extends AuraWallet {
 
     // Get the wallet address.
     String? bech32Address =
-        await Storehouse.storage.getWalletAddress(walletName: walletName);
+        await storehouse.storage.getWalletAddress(walletName: walletName);
 
     // Create the execute contract message.
     final cosMWasm.MsgExecuteContract request = cosMWasm.MsgExecuteContract(
@@ -282,7 +288,7 @@ class AuraWalletImpl extends AuraWallet {
         amount: fee.toString(), gasLimit: gasLimit, denom: denom);
 
     // Get the network info.
-    final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
+    final NetworkInfo networkInfo = storehouse.configService.networkInfo;
 
     // Sign the transaction.
     Tx tx = await AuraWalletHelper.signTransaction(
@@ -328,7 +334,7 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<String?> getWalletPassPhrase() async {
     try {
-      return Storehouse.storage.getWalletPassPhrase(walletName: walletName);
+      return storehouse.storage.getWalletPassPhrase(walletName: walletName);
     } catch (e) {
       // Handle the error and throw an AuraInternalError with the appropriate error code and message.
       String message =
@@ -355,7 +361,7 @@ class AuraWalletImpl extends AuraWallet {
     required int gasLimit,
     String? memo,
   }) async {
-    String denom = Storehouse.configService.deNom;
+    String denom = storehouse.configService.deNom;
 
     // Step #1: Create a message for the transaction.
     final MsgSend message = bank.MsgSend.create()
@@ -372,17 +378,17 @@ class AuraWalletImpl extends AuraWallet {
       denom: denom,
     );
 
-    final NetworkInfo networkInfo = Storehouse.configService.networkInfo;
+    final NetworkInfo networkInfo = storehouse.configService.networkInfo;
 
     String? passPhrase =
-        await Storehouse.storage.getWalletPassPhrase(walletName: walletName);
+        await storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
     if (passPhrase == null) {
       // Handle the case where the passphrase is null and throw an AuraInternalError.
       throw AuraInternalError(ErrorCode.NullPassphrase, "Passphrase is null");
     }
     final wallet = Wallet.derive(
-        passPhrase.split(' '), Storehouse.configService.networkInfo);
+        passPhrase.split(' '), storehouse.configService.networkInfo);
 
     try {
       // Sign the transaction.
@@ -418,7 +424,7 @@ class AuraWalletImpl extends AuraWallet {
     try {
       final request = await _httpClient.getUrl(
         Uri.parse(
-          Storehouse.configService.verifyTransactionUrl(txHash),
+          storehouse.configService.verifyTransactionUrl(txHash),
         ),
       );
 

@@ -4,6 +4,9 @@ import 'dart:developer' as auraLog;
 
 // LogInter is a gRPC client interceptor used for logging gRPC requests and responses.
 class LogInter implements $grpc.ClientInterceptor {
+  final Storehouse _storehouse;
+
+  LogInter(this._storehouse);
   @override
   $grpc.ResponseStream<R> interceptStreaming<Q, R>(
       $grpc.ClientMethod<Q, R> method,
@@ -21,7 +24,7 @@ class LogInter implements $grpc.ClientInterceptor {
       $grpc.CallOptions options,
       $grpc.ClientUnaryInvoker<Q, R> invoker) {
     // Check if logging is enabled in the configuration.
-    final enableLogging = Storehouse.configOption.isEnableLog;
+    final enableLogging = _storehouse.configOption.isEnableLog;
 
     if (enableLogging) {
       // Log the gRPC request.

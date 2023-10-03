@@ -134,7 +134,8 @@ class AuraWalletHelper {
     return privateKey.length == 32 && ecc.isPrivate(privateKey);
   }
 
-  static Future<Wallet> deriveWallet(String? passPhrase) async {
+  static Future<Wallet> deriveWallet(
+      String? passPhrase, Storehouse storehouse) async {
     try {
       // If the passphrase is null, return null (no wallet found).
       if (passPhrase == null ||
@@ -147,7 +148,7 @@ class AuraWalletHelper {
 
       // Derive a wallet from the stored passphrase.
       final Wallet wallet = Wallet.derive(
-          passPhrase.split(' '), Storehouse.configService.networkInfo);
+          passPhrase.split(' '), storehouse.configService.networkInfo);
 
       // Create and return an AuraWalletImpl instance with the loaded wallet details.
       return wallet;

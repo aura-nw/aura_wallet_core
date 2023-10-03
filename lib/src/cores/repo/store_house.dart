@@ -6,14 +6,15 @@ import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config
 /// The `Storehouse` class serves as a central hub for managing dependencies and
 /// providing access to essential configuration elements within the Aura Wallet Core.
 class Storehouse {
-  Storehouse._(); // Private constructor prevents direct instantiation.
+  Storehouse(this.storage, this.configOption,
+      this.configService); // Private constructor prevents direct instantiation.
 
   // Stores the instance of `AuraInternalStorage` for data storage and retrieval.
-  static late AuraInternalStorage storage;
+  final AuraInternalStorage storage;
 
   // Stores the configuration options for the Aura Wallet Core.
-  static late ConfigOption configOption;
+  final ConfigOption configOption;
 
   // Config service contains static information.
-  static late AuraWalletCoreConfigService configService;
+  final AuraWalletCoreConfigService configService;
 }

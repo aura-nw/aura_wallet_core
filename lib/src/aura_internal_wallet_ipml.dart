@@ -18,18 +18,19 @@ import 'package:hex/hex.dart';
 
 // Implementation of AuraWalletCore interface.
 class AuraWalletCoreImpl implements AuraWalletCore {
+  late final Storehouse storehouse;
   AuraWalletCoreImpl({
     required AuraEnvironment environment,
     required BiometricOptions? biometricOptions,
     required ConfigOption configOption,
   }) {
     // Initialize Storehouse settings with provided environment and biometric options.
-    Storehouse.storage = AuraInternalStorage(biometricOptions);
-    Storehouse.configOption = configOption;
+    var storage = AuraInternalStorage(biometricOptions);
     const AuraWalletCoreConfigService configService =
         AuraWalletCoreConfigService();
     configService.init(environment);
-    Storehouse.configService = configService;
+
+    storehouse = Storehouse(storage, configOption, configService);
   }
 
   // Create a new random HD wallet.
@@ -43,11 +44,12 @@ class AuraWalletCoreImpl implements AuraWalletCore {
 
       // Derive a wallet from the generated mnemonic.
       final Wallet wallet =
-          Wallet.derive(mnemonic, Storehouse.configService.networkInfo);
+          Wallet.derive(mnemonic, storehouse.configService.networkInfo);
 
       // Create and return a ComprehensiveWallet instance with the derived wallet details.
       return ComprehensiveWallet(
         auraWallet: AuraWalletImpl(
+          storehouse: storehouse,
           walletName: walletName,
           bech32Address: wallet.bech32Address,
         ),
@@ -74,7 +76,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         passPhrase,
         (wallet) async {
           // Save the wallet details to storage.
-          await Storehouse.storage.saveWalletToStorage(
+          await storehouse.storage.saveWalletToStorage(
             walletName: walletName,
             passphrase: passPhrase,
             walletAddress: wallet.bech32Address,
@@ -102,7 +104,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     try {
       // Attempt to read the passphrase from storage.
       String? passPhrase =
-          await Storehouse.storage.getWalletPassPhrase(walletName: walletName);
+          await storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
       return _restoreWallet(passPhrase, null, walletName);
     } catch (e) {
@@ -122,7 +124,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   Future<void> removeWallet({String walletName = defaultWalletName}) async {
     try {
       // Delete the wallet using the provided walletName.
-      await Storehouse.storage.deleteWallet(walletName: walletName);
+      await storehouse.storage.deleteWallet(walletName: walletName);
     } catch (e) {
       // Handle any exceptions that might occur during wallet removal.
       if (e is PlatformException) {
@@ -140,13 +142,15 @@ class AuraWalletCoreImpl implements AuraWalletCore {
     String walletName = defaultWalletName,
   ]) async {
 // Derive a wallet from the provided passphrase.
-    final Wallet wallet = await AuraWalletHelper.deriveWallet(passPhrase);
+    final Wallet wallet =
+        await AuraWalletHelper.deriveWallet(passPhrase, storehouse);
 
     // Register callback before return Wallet
     await callBack?.call(wallet);
 
     // Create and return an AuraWalletImpl instance with the restored wallet details.
     return AuraWalletImpl(
+      storehouse: storehouse,
       walletName: walletName,
       bech32Address: wallet.bech32Address,
     );
