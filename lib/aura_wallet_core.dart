@@ -34,7 +34,7 @@ abstract class AuraWalletCore {
   /// Generates a random HD wallet.
   ///
   /// Returns an [ComprehensiveWallet] containing the wallet information.
-  Future<ComprehensiveWallet> createRandomHDWallet();
+  Future<AuraWallet> createRandomHDWallet();
 
   /// Restores a HD wallet from a passphrase.
   ///

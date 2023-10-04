@@ -35,7 +35,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
 
   // Create a new random HD wallet.
   @override
-  Future<ComprehensiveWallet> createRandomHDWallet({
+  Future<AuraWallet> createRandomHDWallet({
     String walletName = defaultWalletName,
   }) async {
     try {
@@ -47,12 +47,10 @@ class AuraWalletCoreImpl implements AuraWalletCore {
           Wallet.derive(mnemonic, storehouse.configService.networkInfo);
 
       // Create and return a ComprehensiveWallet instance with the derived wallet details.
-      return ComprehensiveWallet(
-        auraWallet: AuraWalletImpl(
-          storehouse: storehouse,
-          walletName: walletName,
-          bech32Address: wallet.bech32Address,
-        ),
+      return AuraWalletImpl(
+        storehouse: storehouse,
+        walletName: walletName,
+        bech32Address: wallet.bech32Address,
         mnemonic: mnemonic.join(' '),
         privateKey: HEX.encode(wallet.privateKey),
       );

@@ -30,9 +30,12 @@ class AuraWalletImpl extends AuraWallet {
     required this.storehouse,
     required String walletName,
     required String bech32Address,
+    String? mnemonic,
+    String? privateKey,
   }) : super(
           walletName: walletName,
           bech32Address: bech32Address,
+          mnemonic: mnemonic,
         ) {
     _txServiceClient = auraTx.ServiceClient(
       storehouse.configService.networkInfo.gRPCChannel,

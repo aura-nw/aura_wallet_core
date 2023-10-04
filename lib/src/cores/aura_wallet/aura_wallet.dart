@@ -7,10 +7,14 @@ import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction
 abstract class AuraWallet {
   final String walletName;
   final String bech32Address;
+  String? mnemonic;
+  String? privateKey;
 
-  const AuraWallet({
+  AuraWallet({
     required this.walletName,
     required this.bech32Address,
+    this.mnemonic,
+    this.privateKey,
   });
 
   /// Create a new transaction and sign it.
@@ -83,29 +87,4 @@ abstract class AuraWallet {
 
   /// Return the mnemonic passphrase of the user.
   Future<String?> getWalletPassPhrase();
-}
-
-/// Represents a Comprehensive Wallet in the Aura Wallet application.
-///
-/// A `ComprehensiveWallet` combines both the cryptographic credentials (mnemonic
-/// and private key) and an associated `AuraWallet` instance. It serves as a
-/// complete representation of a wallet, including the means to sign and manage
-/// transactions (through `AuraWallet`) and the underlying cryptographic identity.
-class ComprehensiveWallet {
-  final String mnemonic;
-  final String privateKey;
-  final AuraWallet auraWallet;
-
-  /// Constructor for a `ComprehensiveWallet`.
-  ///
-  /// Parameters:
-  ///   - [mnemonic]: A secret phrase used for cryptographic key derivation.
-  ///   - [privateKey]: A private key associated with the wallet's identity.
-  ///   - [auraWallet]: An instance of `AuraWallet` for transaction management
-  ///                   and communication with the Aura Network.
-  ComprehensiveWallet({
-    required this.mnemonic,
-    required this.privateKey,
-    required this.auraWallet,
-  });
 }

@@ -2,17 +2,12 @@ import 'dart:typed_data';
 
 import 'package:alan/alan.dart';
 import 'package:alan/proto/tendermint/abci/types.pb.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
-import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
-import 'package:aura_wallet_core/src/cores/utils/aura_wallet_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:protobuf/protobuf.dart' as proto;
-
-import '../cores/aura_wallet/aura_wallet_impl.dart';
 
 /// The `AuraWalletHelper` class provides utility methods for various tasks
 /// related to the Aura Wallet Core. These methods include converting
