@@ -235,6 +235,8 @@ class AuraWalletImpl extends AuraWallet {
     required Map<String, dynamic> executeMessage,
     required int gasLimit,
     required int fee,
+
+    /// TODO : handle automatically calc the funds
     List<int>? funds,
   }) async {
     // Validate the contract address.
