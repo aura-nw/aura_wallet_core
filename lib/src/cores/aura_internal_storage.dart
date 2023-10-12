@@ -77,9 +77,17 @@ class AuraInternalStorage {
   }
 
   Future<void> deleteWallet({required String walletName}) async {
-    await _storage.delete(
-        key: walletName,
-        aOptions: _getNonSecureAndroidOptions,
-        iOptions: _getNonSecureIosOptions);
+    final String ? walletAddress = await getWalletAddress(walletName: walletName);
+
+    if(walletAddress != null){
+      await _storage.delete(
+          key: walletName,
+          aOptions: _getNonSecureAndroidOptions,
+          iOptions: _getNonSecureIosOptions);
+
+      await _storage.delete(
+        key: walletAddress,
+      );
+    }
   }
 }
