@@ -48,14 +48,14 @@ class AuraInternalStorage {
   Future<void> saveWalletToStorage(
       {required String walletName,
       required String walletAddress,
-      required String passphrase}) async {
+      required String passPhraseOrPrivateKey}) async {
     await _storage.write(
         key: walletName,
         value: walletAddress,
         aOptions: _getNonSecureAndroidOptions,
         iOptions: _getNonSecureIosOptions);
 
-    await _storage.write(key: walletAddress, value: passphrase);
+    await _storage.write(key: walletAddress, value: passPhraseOrPrivateKey);
   }
 
   Future<String?> getWalletPassPhrase({required String walletName}) async {
@@ -77,9 +77,10 @@ class AuraInternalStorage {
   }
 
   Future<void> deleteWallet({required String walletName}) async {
-    final String ? walletAddress = await getWalletAddress(walletName: walletName);
+    final String? walletAddress =
+        await getWalletAddress(walletName: walletName);
 
-    if(walletAddress != null){
+    if (walletAddress != null) {
       await _storage.delete(
           key: walletName,
           aOptions: _getNonSecureAndroidOptions,

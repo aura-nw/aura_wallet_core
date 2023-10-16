@@ -7,7 +7,9 @@ import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.da
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
 import 'package:flutter/services.dart';
+import 'package:hex/hex.dart';
 import 'package:protobuf/protobuf.dart' as proto;
+import 'dart:developer' as Log;
 
 /// The `AuraWalletHelper` class provides utility methods for various tasks
 /// related to the Aura Wallet Core. These methods include converting
@@ -18,7 +20,6 @@ class AuraWalletHelper {
   ///
   /// Parameters:
   ///   - [txResponse]: The list of transaction responses to convert.
-  ///   - [type]: The type of AuraTransaction to create.
   /// Returns:
   ///   - A list of `AuraTransaction` objects.
   static List<AuraTransaction> convertToAuraTransaction(
@@ -130,38 +131,53 @@ class AuraWalletHelper {
   }
 
   static Future<Wallet> deriveWallet(
-      String? passPhrase, Storehouse storehouse) async {
+      String? passPhraseOrPrivateKey, Storehouse storehouse) async {
+    if (passPhraseOrPrivateKey == null) {
+      throw AuraInternalError(
+        ErrorCode.InvalidPassphrase,
+        'Invalid or missing passphrase or private key.',
+      );
+    }
+
     try {
-      // If the passphrase is null, return null (no wallet found).
-      if (passPhrase == null ||
-          !AuraWalletHelper.checkMnemonic(mnemonic: passPhrase)) {
-        throw AuraInternalError(
-          ErrorCode.InvalidPassphrase,
-          'Invalid passphrase provided.',
+      if (AuraWalletHelper.checkMnemonic(mnemonic: passPhraseOrPrivateKey)) {
+        print("Mnemonic = $passPhraseOrPrivateKey");
+        // Derive a wallet from the stored passphrase.
+        final Wallet wallet = Wallet.derive(
+          passPhraseOrPrivateKey.split(' '),
+          storehouse.configService.networkInfo,
         );
-      }
-
-      // Derive a wallet from the stored passphrase.
-      final Wallet wallet = Wallet.derive(
-          passPhrase.split(' '), storehouse.configService.networkInfo);
-
-      // Create and return an AuraWalletImpl instance with the loaded wallet details.
-      return wallet;
-    } catch (e) {
-      // Handle any exceptions that might occur during wallet loading.
-      if (e is PlatformException) {
-        // If the exception is a PlatformException, create an AuraInternalError with a specific error code and message.
-        throw AuraInternalError(
-          ErrorCode.PlatformError,
-          '[${e.code}] ${e.message}',
-        );
+        return wallet;
       } else {
-        // If it's any other type of exception, create an AuraInternalError with a different error code and the exception message.
-        throw AuraInternalError(
-          ErrorCode.WalletLoadingError,
-          e.toString(),
+        print("privateKey = $passPhraseOrPrivateKey");
+        final privateKey = HEX.decode(passPhraseOrPrivateKey);
+
+        if (!AuraWalletHelper.checkPrivateKey(Uint8List.fromList(privateKey))) {
+          throw AuraInternalError(
+            ErrorCode.InvalidPassphrase,
+            'Invalid or missing passphrase or private key.',
+          );
+        }
+
+        final wallet = Wallet.import(
+          storehouse.configService.networkInfo,
+          Uint8List.fromList(privateKey),
         );
+
+        return wallet;
       }
+    } catch (e, s) {
+      // Handle any exceptions that might occur during wallet loading.
+      final errorMessage =
+          (e is PlatformException) ? '[${e.code}] ${e.message}' : e.toString();
+
+      print("stact $s");
+      Log.log(e.toString(), stackTrace: s);
+
+      throw AuraInternalError(
+        ErrorCode.WalletLoadingError,
+        errorMessage,
+      );
     }
   }
 }

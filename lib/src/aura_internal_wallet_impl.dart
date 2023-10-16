@@ -21,11 +21,11 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   late final Storehouse storehouse;
   AuraWalletCoreImpl({
     required AuraEnvironment environment,
-    required BiometricOptions? biometricOptions,
+    required AuraInternalStorage internalStorage,
     required ConfigOption configOption,
   }) {
     // Initialize Storehouse settings with provided environment and biometric options.
-    var storage = AuraInternalStorage(biometricOptions);
+    var storage = internalStorage;
     const AuraWalletCoreConfigService configService =
         AuraWalletCoreConfigService();
     configService.init(environment);
@@ -76,7 +76,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
           // Save the wallet details to storage.
           await storehouse.storage.saveWalletToStorage(
             walletName: walletName,
-            passphrase: passPhraseOrPrivateKey,
+            passPhraseOrPrivateKey: passPhraseOrPrivateKey,
             walletAddress: wallet.bech32Address,
           );
         },
@@ -135,13 +135,15 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   }
 
   Future<AuraWallet> _restoreWallet(
-    String? passPhrase, [
+    String? passPhraseOrPrivateKey, [
     Future<void> Function(Wallet)? callBack,
     String walletName = defaultWalletName,
   ]) async {
-// Derive a wallet from the provided passphrase.
-    final Wallet wallet =
-        await AuraWalletHelper.deriveWallet(passPhrase, storehouse);
+    // Derive a wallet from the provided passphrase.
+    final Wallet wallet = await AuraWalletHelper.deriveWallet(
+      passPhraseOrPrivateKey,
+      storehouse,
+    );
 
     // Register callback before return Wallet
     await callBack?.call(wallet);

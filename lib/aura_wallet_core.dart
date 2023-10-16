@@ -3,7 +3,9 @@ library aura_wallet_core;
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/config_options.dart';
 import 'package:aura_wallet_core/config_options/environment_options.dart';
+import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
+import 'package:aura_wallet_core/src/aura_internal_wallet_impl.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_impl.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
@@ -21,18 +23,19 @@ abstract class AuraWalletCore {
       isEnableLog: true,
     ),
   }) {
-    return _instance(environment, biometricOptions, configOption);
+    AuraInternalStorage internalStorage = AuraInternalStorage(biometricOptions);
+    return _instance(environment, internalStorage, configOption);
   }
 
   /// Internal method to create an instance of [AuraWalletCore].
   static AuraWalletCore _instance(
     AuraEnvironment environment,
-    BiometricOptions? biometricOptions,
+    AuraInternalStorage internalStorage,
     ConfigOption configOption,
   ) =>
       AuraWalletCoreImpl(
           environment: environment,
-          biometricOptions: biometricOptions,
+          internalStorage: internalStorage,
           configOption: configOption);
 
   /// Generates a random HD wallet.

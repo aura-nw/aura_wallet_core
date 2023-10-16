@@ -27,7 +27,7 @@ class AuraWalletCoreConfigService {
   String get baseUrl => _netWorkInfo['baseUrl'];
 
   /// Gets the Bech32 configuration for the chain.
-  String get becH32Config => _netWorkInfo['bech32Config'];
+  String get becH32Config => _chainInfo['bech32Config'];
 
   /// Gets the chain ID.
   String get chainId => _netWorkInfo['chainId'];
@@ -74,7 +74,7 @@ class AuraWalletCoreConfigService {
       );
 
   /// Gets the gRPC port for network communication.
-  int get grpcPort => int.parse(_netWorkInfo['grpcPort']);
+  int get grpcPort => _netWorkInfo['grpcPort'];
 
   /// Generates a verification transaction URL based on the provided transaction hash (txHash).
   String verifyTransactionUrl(String txHash) {
