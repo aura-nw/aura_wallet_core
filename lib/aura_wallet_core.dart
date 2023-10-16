@@ -6,7 +6,6 @@ import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_impl.dart';
-import 'package:aura_wallet_core/src/aura_internal_wallet_impl.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
 /// An abstract class representing the core functionality of an Aura wallet.

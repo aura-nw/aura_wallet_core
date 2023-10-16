@@ -1,6 +1,5 @@
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/aura_wallet_core.dart';
-import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/config_options.dart';
 import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
