@@ -2,7 +2,7 @@ import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/aura_wallet_core.dart';
 import 'package:aura_wallet_core/config_options/biometric_options.dart';
 import 'package:aura_wallet_core/config_options/config_options.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
+import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet_impl.dart';
@@ -66,17 +66,17 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   // Restore an HD wallet using a provided passphrase.
   @override
   Future<AuraWallet> restoreHDWallet({
-    required String passPhrase,
+    required String passPhraseOrPrivateKey,
     String walletName = defaultWalletName,
   }) async {
     try {
       return _restoreWallet(
-        passPhrase,
+        passPhraseOrPrivateKey,
         (wallet) async {
           // Save the wallet details to storage.
           await storehouse.storage.saveWalletToStorage(
             walletName: walletName,
-            passphrase: passPhrase,
+            passphrase: passPhraseOrPrivateKey,
             walletAddress: wallet.bech32Address,
           );
         },

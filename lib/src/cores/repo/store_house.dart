@@ -1,5 +1,4 @@
 import 'package:aura_wallet_core/config_options/config_options.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
 import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
 

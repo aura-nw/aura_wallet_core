@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:aura_wallet_core/config_options/enviroment_options.dart';
+import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:alan/alan.dart';
 
 /// The [AuraWalletCoreConfigService] class provides configuration settings for the Aura Wallet Core SDK.
