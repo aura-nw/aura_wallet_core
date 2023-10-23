@@ -427,9 +427,19 @@ class AuraWalletImpl extends AuraWallet {
   @override
   Future<bool> verifyTxHash({required String txHash}) async {
     try {
-      final request = await _httpClient.getUrl(
+      final request = await _httpClient.postUrl(
         Uri.parse(
-          storehouse.configService.verifyTransactionUrl(txHash),
+          storehouse.configService.baseUrl,
+        ),
+      );
+
+      request.headers.set("content-type", "application/json");
+
+      request.add(
+        utf8.encode(
+          jsonEncode(
+            storehouse.configService.verifyTxHashRequestBody(txHash),
+          ),
         ),
       );
 
@@ -440,8 +450,10 @@ class AuraWalletImpl extends AuraWallet {
         () => _httpClient.close(),
       );
 
-      List<Map<String, dynamic>> trans =
-          List.from(jsonDecode(data)['data']['transactions']);
+      final Map<String, dynamic> responseData = jsonDecode(data);
+
+      List<Map<String, dynamic>> trans = List.from(
+          responseData['data'][storehouse.configService.queryChainName]['transaction']);
 
       if (trans.isEmpty) {
         // Throw an error if no transactions are found.
@@ -450,10 +462,10 @@ class AuraWalletImpl extends AuraWallet {
       }
 
       Map<String, dynamic> tran =
-          Map<String, dynamic>.from(trans[0]['tx_response']);
+          Map<String, dynamic>.from(trans[0]);
 
       // Check if the transaction code is "0" (indicating success).
-      return tran['code'] == successFullTransactionCode;
+      return tran['code'].toString() == successFullTransactionCode;
     } catch (e) {
       // Handle any error that occurs during verification.
       String errorMessage =

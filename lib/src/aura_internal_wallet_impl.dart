@@ -25,7 +25,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
   }) {
     // Initialize Storehouse settings with provided environment and biometric options.
     var storage = internalStorage;
-    const AuraWalletCoreConfigService configService =
+    final AuraWalletCoreConfigService configService =
         AuraWalletCoreConfigService();
     configService.init(environment);
 

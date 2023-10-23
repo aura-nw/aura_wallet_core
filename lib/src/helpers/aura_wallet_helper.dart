@@ -141,7 +141,6 @@ class AuraWalletHelper {
 
     try {
       if (AuraWalletHelper.checkMnemonic(mnemonic: passPhraseOrPrivateKey)) {
-        print("Mnemonic = $passPhraseOrPrivateKey");
         // Derive a wallet from the stored passphrase.
         final Wallet wallet = Wallet.derive(
           passPhraseOrPrivateKey.split(' '),
@@ -149,7 +148,6 @@ class AuraWalletHelper {
         );
         return wallet;
       } else {
-        print("privateKey = $passPhraseOrPrivateKey");
         final privateKey = HEX.decode(passPhraseOrPrivateKey);
 
         if (!AuraWalletHelper.checkPrivateKey(Uint8List.fromList(privateKey))) {
@@ -171,7 +169,6 @@ class AuraWalletHelper {
       final errorMessage =
           (e is PlatformException) ? '[${e.code}] ${e.message}' : e.toString();
 
-      print("stact $s");
       Log.log(e.toString(), stackTrace: s);
 
       throw AuraInternalError(

@@ -5,7 +5,7 @@ import 'package:alan/alan.dart';
 
 /// The [AuraWalletCoreConfigService] class provides configuration settings for the Aura Wallet Core SDK.
 class AuraWalletCoreConfigService {
-  const AuraWalletCoreConfigService();
+  AuraWalletCoreConfigService();
 
   // Access environment variables using Flutter Dotenv
   Map<String, String> get env => dotenv.env;
@@ -49,12 +49,15 @@ class AuraWalletCoreConfigService {
 
     switch (environment) {
       case AuraEnvironment.testNet:
+        _initVerifyTxHashRequestBody('xstaxy');
         await dotenv.load(fileName: '$baseAssetUri.env.testnet');
         break;
       case AuraEnvironment.euphoria:
+        _initVerifyTxHashRequestBody('euphoria');
         await dotenv.load(fileName: '$baseAssetUri.env.euphoria');
         break;
       case AuraEnvironment.mainNet:
+        _initVerifyTxHashRequestBody('xstaxy');
         await dotenv.load(fileName: '$baseAssetUri.env.mainnet');
         break;
     }
@@ -76,8 +79,51 @@ class AuraWalletCoreConfigService {
   /// Gets the gRPC port for network communication.
   int get grpcPort => _netWorkInfo['grpcPort'];
 
-  /// Generates a verification transaction URL based on the provided transaction hash (txHash).
-  String verifyTransactionUrl(String txHash) {
-    return '$baseUrl/api/v1/transaction?txHash=$txHash&chainid=$chainId';
+  /// Graphql init query with environment
+  void _initVerifyTxHashRequestBody(String environment) {
+    const String query = r'''
+    query queryListTopTransaction(
+      $limit: Int = 100
+      $order: order_by = desc
+      $hash: String = null
+    ) {
+      xstaxy {
+        transaction(
+          limit: $limit
+          where: {
+            hash: { _eq: $hash }
+          }
+          order_by: [{ height: $order}, {index: $order }]
+        ) {
+          id
+          hash
+          code
+        }
+      }
+    }
+    ''';
+
+    _query = query.replaceFirst('\${environment}', environment);
+
+    queryChainName = environment;
+  }
+
+  /// Graphql query. Create after init service
+  late String _query;
+
+  /// Use when verify a txHash object on a transaction. Create after init service
+  late String queryChainName;
+
+  /// generates verifyTxHashRequestBody from txHash
+  Map<String, dynamic> verifyTxHashRequestBody(String txHash) {
+    return {
+      'operationName': 'queryListTopTransaction',
+      'query': _query,
+      'variables': {
+        'limit': 1,
+        'order': 'desc',
+        'hash': txHash,
+      },
+    };
   }
 }
