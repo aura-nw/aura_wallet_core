@@ -44,7 +44,10 @@ abstract class AuraWalletCore {
   /// Generates a random HD wallet.
   ///
   /// Returns an [AuraWallet] containing the wallet information.
-  Future<AuraWallet> createRandomHDWallet();
+  /// [walletName]: The name of the wallet (default is [defaultWalletName]).
+  Future<AuraWallet> createRandomHDWallet({
+    String walletName = defaultWalletName,
+  });
 
   /// Restores an HD wallet from a passphrase or private key.
   ///
