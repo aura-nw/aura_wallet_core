@@ -8,7 +8,9 @@ import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/aura_internal_wallet_impl.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 
-export 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction_info.dart';
+export 'src/cores/aura_wallet/entities/aura_transaction_info.dart';
+export 'src/cores/aura_wallet/aura_wallet.dart';
+export 'src/helpers/aura_wallet_helper.dart';
 
 /// An abstract class representing the core functionality of an Aura wallet.
 ///
