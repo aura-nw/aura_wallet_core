@@ -124,10 +124,12 @@ class AuraWalletHelper {
   ///   - [privateKey]: The private key as a `Uint8List`.
   /// Returns:
   ///   - `true` if the private key is valid, `false` otherwise.
-  static bool checkPrivateKey(Uint8List privateKey) {
+  static bool checkPrivateKey(String privateKey) {
+    final List<int> deCodePrivateKey = HEX.decode(privateKey);
+
     Bip32EccCurve ecc = Bip32EccCurve();
 
-    return privateKey.length == 32 && ecc.isPrivate(privateKey);
+    return privateKey.length == 32 && ecc.isPrivate(Uint8List.fromList(deCodePrivateKey));
   }
 
   static Future<Wallet> deriveWallet(
@@ -150,7 +152,7 @@ class AuraWalletHelper {
       } else {
         final privateKey = HEX.decode(passPhraseOrPrivateKey);
 
-        if (!AuraWalletHelper.checkPrivateKey(Uint8List.fromList(privateKey))) {
+        if (!AuraWalletHelper.checkPrivateKey(passPhraseOrPrivateKey)) {
           throw AuraInternalError(
             ErrorCode.InvalidPassphrase,
             'Invalid or missing passphrase or private key.',

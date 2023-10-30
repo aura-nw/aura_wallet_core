@@ -87,7 +87,7 @@ class AuraWalletCoreConfigService {
       $order: order_by = desc
       $hash: String = null
     ) {
-      xstaxy {
+      ${environment} {
         transaction(
           limit: $limit
           where: {
