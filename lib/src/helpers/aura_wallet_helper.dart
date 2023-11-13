@@ -121,7 +121,7 @@ class AuraWalletHelper {
   /// Checks the validity of a private key.
   ///
   /// Parameters:
-  ///   - [privateKey]: The private key as a `Uint8List`.
+  ///   - [privateKey]: The private key as a `String`.
   /// Returns:
   ///   - `true` if the private key is valid, `false` otherwise.
   static bool checkPrivateKey(String privateKey) {
