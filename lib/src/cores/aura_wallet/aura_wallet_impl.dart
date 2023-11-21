@@ -30,12 +30,15 @@ class AuraWalletImpl extends AuraWallet {
     required this.storehouse,
     required String walletName,
     required String bech32Address,
+    required Uint8List publicKey,
     String? mnemonic,
     String? privateKey,
   }) : super(
           walletName: walletName,
           bech32Address: bech32Address,
           mnemonic: mnemonic,
+          publicKey: publicKey,
+          privateKey: privateKey,
         ) {
     _txServiceClient = auraTx.ServiceClient(
       storehouse.configService.networkInfo.gRPCChannel,
@@ -452,8 +455,8 @@ class AuraWalletImpl extends AuraWallet {
 
       final Map<String, dynamic> responseData = jsonDecode(data);
 
-      List<Map<String, dynamic>> trans = List.from(
-          responseData['data'][storehouse.configService.queryChainName]['transaction']);
+      List<Map<String, dynamic>> trans = List.from(responseData['data']
+          [storehouse.configService.queryChainName]['transaction']);
 
       if (trans.isEmpty) {
         // Throw an error if no transactions are found.
@@ -461,8 +464,7 @@ class AuraWalletImpl extends AuraWallet {
             ErrorCode.NoTransactionsFound, 'No transactions found');
       }
 
-      Map<String, dynamic> tran =
-          Map<String, dynamic>.from(trans[0]);
+      Map<String, dynamic> tran = Map<String, dynamic>.from(trans[0]);
 
       // Check if the transaction code is "0" (indicating success).
       return tran['code'].toString() == successFullTransactionCode;

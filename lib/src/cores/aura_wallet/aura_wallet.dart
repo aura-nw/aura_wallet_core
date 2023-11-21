@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 import 'package:aura_wallet_core/enum/order_enum.dart';
@@ -7,12 +9,14 @@ import 'package:aura_wallet_core/src/cores/aura_wallet/entities/aura_transaction
 abstract class AuraWallet {
   final String walletName;
   final String bech32Address;
+  final Uint8List publicKey;
   String? mnemonic;
   String? privateKey;
 
   AuraWallet({
     required this.walletName,
     required this.bech32Address,
+    required this.publicKey,
     this.mnemonic,
     this.privateKey,
   });

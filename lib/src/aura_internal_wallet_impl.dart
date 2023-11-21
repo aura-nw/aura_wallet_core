@@ -18,6 +18,7 @@ import 'package:hex/hex.dart';
 // Implementation of AuraWalletCore interface.
 class AuraWalletCoreImpl implements AuraWalletCore {
   late final Storehouse storehouse;
+
   AuraWalletCoreImpl({
     required AuraEnvironment environment,
     required AuraInternalStorage internalStorage,
@@ -52,6 +53,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
         bech32Address: wallet.bech32Address,
         mnemonic: mnemonic.join(' '),
         privateKey: HEX.encode(wallet.privateKey),
+        publicKey: wallet.publicKey,
       );
     } catch (e) {
       // Handle any exceptions that might occur during wallet creation.
@@ -152,6 +154,7 @@ class AuraWalletCoreImpl implements AuraWalletCore {
       storehouse: storehouse,
       walletName: walletName,
       bech32Address: wallet.bech32Address,
+      publicKey: wallet.publicKey,
     );
   }
 }
