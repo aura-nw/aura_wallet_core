@@ -16,6 +16,27 @@ import 'dart:developer' as Log;
 /// transaction responses, checking mnemonic validity, creating transaction fees,
 /// signing transactions, and validating private keys.
 class AuraWalletHelper {
+  /// get private bytes key from string
+  ///
+  /// Parameters:
+  ///   - [privateKey]: User private key.
+  /// Returns:
+  ///   - Uint8List.
+  static Uint8List getPrivateKeyFromString(String privateKey){
+    return Uint8List.fromList(HEX.decode(privateKey));
+  }
+
+  /// get private bytes key from bytes
+  ///
+  /// Parameters:
+  ///   - [privateKey]: User private key.
+  /// Returns:
+  ///   - String
+  static String getPrivateKeyFromBytes(Uint8List privateKey){
+    return HEX.encode(privateKey);
+  }
+
+
   /// Converts a list of `TxResponse` objects into a list of `AuraTransaction` objects.
   ///
   /// Parameters:
