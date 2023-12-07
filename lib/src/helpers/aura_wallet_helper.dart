@@ -19,11 +19,32 @@ class AuraWalletHelper {
   /// get private bytes key from string
   ///
   /// Parameters:
-  ///   - [privateKey]: User private key.
+  ///   - [privateKey]: User private key or mnemonic
   /// Returns:
   ///   - Uint8List.
-  static Uint8List getPrivateKeyFromString(String privateKey){
-    return Uint8List.fromList(HEX.decode(privateKey));
+  static Uint8List getPrivateKeyFromString(String mnemonicOrPrivateKey,[String derivationPath = "m/44'/118'/0'/0/0"]) {
+    if (checkPrivateKey(mnemonicOrPrivateKey)) {
+      return Uint8List.fromList(
+        HEX.decode(mnemonicOrPrivateKey),
+      );
+    } else {
+
+      final List<String> mnemonic = mnemonicOrPrivateKey.split(' ');
+
+      // Validate the mnemonic
+      if (!Bip39.validateMnemonic(mnemonic,)) {
+        throw Exception('Invalid mnemonic');
+      }
+
+      // Convert the mnemonic to a BIP32 instance
+      final seed = Bip39.mnemonicToSeed(mnemonic);
+      final root = Bip32.fromSeed(seed);
+
+      // Get the node from the derivation path
+      final derivedNode = root.derivePath(derivationPath);
+
+      return derivedNode.privateKey!;
+    }
   }
 
   /// get private bytes key from bytes
@@ -32,10 +53,9 @@ class AuraWalletHelper {
   ///   - [privateKey]: User private key.
   /// Returns:
   ///   - String
-  static String getPrivateKeyFromBytes(Uint8List privateKey){
+  static String getPrivateKeyFromBytes(Uint8List privateKey) {
     return HEX.encode(privateKey);
   }
-
 
   /// Converts a list of `TxResponse` objects into a list of `AuraTransaction` objects.
   ///
@@ -150,7 +170,8 @@ class AuraWalletHelper {
 
     Bip32EccCurve ecc = Bip32EccCurve();
 
-    return privateKey.length == 32 && ecc.isPrivate(Uint8List.fromList(deCodePrivateKey));
+    return privateKey.length == 32 &&
+        ecc.isPrivate(Uint8List.fromList(deCodePrivateKey));
   }
 
   static Future<Wallet> deriveWallet(
@@ -161,7 +182,6 @@ class AuraWalletHelper {
         'Invalid or missing passphrase or private key.',
       );
     }
-
     try {
       if (AuraWalletHelper.checkMnemonic(mnemonic: passPhraseOrPrivateKey)) {
         // Derive a wallet from the stored passphrase.
