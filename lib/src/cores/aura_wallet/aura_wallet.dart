@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:alan/alan.dart';
 import 'package:alan/proto/cosmos/tx/v1beta1/tx.pb.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
 import 'package:aura_wallet_core/enum/order_enum.dart';
@@ -40,7 +41,7 @@ abstract class AuraWallet {
   ///
   /// Parameters:
   ///   - [signedTransaction]: The signed transaction to submit.
-  Future<bool> submitTransaction({required Tx signedTransaction});
+  Future<TxResponse> submitTransaction({required Tx signedTransaction});
 
   /// Check the balance value of the wallet's address.
   Future<String> checkWalletBalance();

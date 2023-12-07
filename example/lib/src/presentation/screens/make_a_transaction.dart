@@ -130,11 +130,7 @@ class _MakeTransactionPageState extends State<MakeTransactionPage>
         signedTransaction: tx,
       );
 
-      if (response) {
-        print("success");
-      } else {
-        print("fail");
-      }
+      print(response.txhash);
     } catch (e) {
       errorMsg = e.toString();
     }

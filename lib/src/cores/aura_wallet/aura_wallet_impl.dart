@@ -66,13 +66,19 @@ class AuraWalletImpl extends AuraWallet {
   /// [signedTransaction]: The signed transaction to be broadcasted.
   ///
   @override
-  Future<bool> submitTransaction({required Tx signedTransaction}) async {
+  Future<TxResponse> submitTransaction({required Tx signedTransaction}) async {
     try {
       final NetworkInfo networkInfo = storehouse.configService.networkInfo;
       final txSender = TxSender.fromNetworkInfo(networkInfo);
       final response = await txSender.broadcastTx(signedTransaction);
 
-      return response.isSuccessful;
+      if (response.isSuccessful) {
+        return response;
+      }
+      throw AuraInternalError(
+        ErrorCode.SubmitTransactionError,
+        'Broadcast transaction has exception [${response.code}]\n${response.rawLog}',
+      );
     } catch (e) {
       // Handle any exceptions that might occur during the transaction submission.
 

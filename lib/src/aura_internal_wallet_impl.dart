@@ -10,7 +10,6 @@ import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.da
 import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
 import 'package:aura_wallet_core/src/constants/aura_constants.dart';
-import 'package:aura_wallet_core/src/helpers/aura_wallet_helper.dart';
 
 import 'package:flutter/services.dart';
 import 'package:hex/hex.dart';
