@@ -1,24 +1,20 @@
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:alan/alan.dart';
+import 'package:aura_wallet_core/src/constants/config.dart';
 
 /// The [AuraWalletCoreConfigService] class provides configuration settings for the Aura Wallet Core SDK.
 class AuraWalletCoreConfigService {
   AuraWalletCoreConfigService();
 
-  // Access environment variables using Flutter Dotenv
-  Map<String, String> get env => dotenv.env;
+  // Default network config
+  Map<String, dynamic> env = AuraNetWorkConfig.devConfig;
 
   // Decode the CHAIN_INFO environment variable into a map
-  Map<String, dynamic> get _chainInfo => jsonDecode(
-        env['CHAIN_INFO']!,
-      );
+  Map<String, dynamic> get _chainInfo => env['CHAIN_INFO'];
 
   // Decode the NET_WORK_INFO environment variable into a map
-  Map<String, dynamic> get _netWorkInfo => jsonDecode(
-        env['NET_WORK_INFO']!,
-      );
+  Map<String, dynamic> get _netWorkInfo => env['NET_WORK_INFO'];
 
   // Access the 'coin' information from the chain configuration
   Map<String, dynamic> get _coin => _chainInfo['coin'];
@@ -30,7 +26,7 @@ class AuraWalletCoreConfigService {
   String get becH32Config => _chainInfo['bech32Config'];
 
   /// Gets the chain ID.
-  String get chainId => _netWorkInfo['chainId'];
+  String get chainId => _chainInfo['chainId'];
 
   /// Gets the denomination of the coin.
   String get deNom => _coin['denom'];
@@ -45,23 +41,21 @@ class AuraWalletCoreConfigService {
   ///
   /// [environment]: The Aura environment (testNet, euphoria, mainNet).
   Future<void> init(AuraEnvironment environment) async {
-    const String baseAssetUri = 'packages/aura_wallet_core/assets/';
-
     switch (environment) {
       case AuraEnvironment.dev:
         _initVerifyTxHashRequestBody('auratestnet');
-        await dotenv.load(fileName: '$baseAssetUri.env.dev');
+        env = AuraNetWorkConfig.devConfig;
       case AuraEnvironment.testNet:
         _initVerifyTxHashRequestBody('xstaxy');
-        await dotenv.load(fileName: '$baseAssetUri.env.testnet');
+        env = AuraNetWorkConfig.testNetConfig;
         break;
       case AuraEnvironment.euphoria:
         _initVerifyTxHashRequestBody('euphoria');
-        await dotenv.load(fileName: '$baseAssetUri.env.euphoria');
+        env = AuraNetWorkConfig.euphoriaConfig;
         break;
       case AuraEnvironment.mainNet:
         _initVerifyTxHashRequestBody('xstaxy');
-        await dotenv.load(fileName: '$baseAssetUri.env.mainnet');
+        env = AuraNetWorkConfig.mainNetConfig;
         break;
     }
   }
