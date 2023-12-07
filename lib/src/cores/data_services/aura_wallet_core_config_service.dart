@@ -48,6 +48,9 @@ class AuraWalletCoreConfigService {
     const String baseAssetUri = 'packages/aura_wallet_core/assets/';
 
     switch (environment) {
+      case AuraEnvironment.dev:
+        _initVerifyTxHashRequestBody('auratestnet');
+        await dotenv.load(fileName: '$baseAssetUri.env.dev');
       case AuraEnvironment.testNet:
         _initVerifyTxHashRequestBody('xstaxy');
         await dotenv.load(fileName: '$baseAssetUri.env.testnet');
