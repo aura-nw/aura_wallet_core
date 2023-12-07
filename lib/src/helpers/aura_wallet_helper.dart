@@ -22,19 +22,10 @@ class AuraWalletHelper {
   ///   - [privateKey]: User private key or mnemonic
   /// Returns:
   ///   - Uint8List.
-  static Uint8List getPrivateKeyFromString(String mnemonicOrPrivateKey,[String derivationPath = "m/44'/118'/0'/0/0"]) {
-    if (checkPrivateKey(mnemonicOrPrivateKey)) {
-      return Uint8List.fromList(
-        HEX.decode(mnemonicOrPrivateKey),
-      );
-    } else {
-
+  static Uint8List getPrivateKeyFromString(String mnemonicOrPrivateKey,
+      [String derivationPath = "m/44'/118'/0'/0/0"]) {
+    if (checkMnemonic(mnemonic: mnemonicOrPrivateKey)) {
       final List<String> mnemonic = mnemonicOrPrivateKey.split(' ');
-
-      // Validate the mnemonic
-      if (!Bip39.validateMnemonic(mnemonic,)) {
-        throw Exception('Invalid mnemonic');
-      }
 
       // Convert the mnemonic to a BIP32 instance
       final seed = Bip39.mnemonicToSeed(mnemonic);
@@ -44,6 +35,10 @@ class AuraWalletHelper {
       final derivedNode = root.derivePath(derivationPath);
 
       return derivedNode.privateKey!;
+    } else {
+      return Uint8List.fromList(
+        HEX.decode(mnemonicOrPrivateKey),
+      );
     }
   }
 
