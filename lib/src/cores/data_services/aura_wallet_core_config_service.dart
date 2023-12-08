@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:alan/alan.dart';
 import 'package:aura_wallet_core/src/constants/config.dart';
+import 'package:grpc/grpc.dart';
 
 /// The [AuraWalletCoreConfigService] class provides configuration settings for the Aura Wallet Core SDK.
 class AuraWalletCoreConfigService {
@@ -70,6 +71,9 @@ class AuraWalletCoreConfigService {
         grpcInfo: GRPCInfo(
           host: grpcHost,
           port: grpcPort,
+          credentials: grpcHost.contains('https')
+              ? const ChannelCredentials.secure()
+              : const ChannelCredentials.insecure(),
         ),
       );
 
