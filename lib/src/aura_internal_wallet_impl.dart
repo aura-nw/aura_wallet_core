@@ -3,7 +3,6 @@ import 'package:aura_wallet_core/aura_wallet_core.dart';
 import 'package:aura_wallet_core/config_options/config_options.dart';
 import 'package:aura_wallet_core/config_options/environment_options.dart';
 import 'package:aura_wallet_core/src/cores/aura_internal_storage.dart';
-import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet.dart';
 import 'package:aura_wallet_core/src/cores/aura_wallet/aura_wallet_impl.dart';
 import 'package:aura_wallet_core/src/cores/data_services/aura_wallet_core_config_service.dart';
 import 'package:aura_wallet_core/src/cores/exceptions/aura_internal_exception.dart';

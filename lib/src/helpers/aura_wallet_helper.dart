@@ -165,7 +165,7 @@ class AuraWalletHelper {
 
     Bip32EccCurve ecc = Bip32EccCurve();
 
-    return privateKey.length == 32 &&
+    return deCodePrivateKey.length == 32 &&
         ecc.isPrivate(Uint8List.fromList(deCodePrivateKey));
   }
 
