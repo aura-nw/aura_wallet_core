@@ -20,10 +20,11 @@ packages:
   alan:
     dependency: transitive
     description:
-      name: alan
-      sha256: "5c4af4ccff43491c17f471299b925c82ee18e8b833b195b296a5f982659f994a"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "414bdbfacda0c871c9ff4248bd1010fb0ad6bcf2"
+      url: "https://github.com/alan-sdk/alan.dart.git"
+    source: git
     version: "0.41.4+1"
   analyzer:
     dependency: transitive

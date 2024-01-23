@@ -59,41 +59,31 @@ class AuraWalletHelper {
   /// Returns:
   ///   - A list of `AuraTransaction` objects.
   static List<AuraTransaction> convertToAuraTransaction(
-    List<TxResponse> txResponse,
+      GetTxsEventResponse response,
   ) {
-    List<AuraTransaction> listResult = txResponse.map((e) {
-      String timeStamp = e.timestamp;
-      String recipient = '';
-      String sender = '';
-      String amount = '';
-      List<Event> listEvent = e.events;
+    return response.txResponses.map((e) {
+      int index = response.txResponses.indexOf(e);
 
-      for (var i = 0; i < listEvent.length; i++) {
-        if (listEvent[i].type == 'transfer') {
-          List<EventAttribute> listAttribute = listEvent[i].attributes;
-          for (var j = 0; j < listAttribute.length; j++) {
-            final txAttribute = listAttribute[j];
-            String keyData = String.fromCharCodes(txAttribute.key);
-            String valueData = String.fromCharCodes(txAttribute.value);
+      final txs = response.txs[index];
 
-            if (keyData == 'recipient') {
-              recipient = valueData;
-            }
-            if (keyData == 'sender') {
-              sender = valueData;
-            }
-            if (keyData == 'amount') {
-              amount = valueData;
-            }
-          }
-        }
-      }
+      final msg = txs.body.messages[0];
 
-      AuraTransaction auraTransaction =
-          AuraTransaction(sender, recipient, amount, timeStamp);
-      return auraTransaction;
+      // Get fee
+      final String fee = txs.authInfo.fee.amount[0].amount;
+
+      final String memo = txs.body.memo;
+
+      final String type = msg.typeUrl;
+      return AuraTransaction(
+        type: type,
+        status: e.code,
+        txHash: e.txhash,
+        timeStamp: e.timestamp,
+        fee: fee,
+        memo: memo,
+        msg: msg,
+      );
     }).toList();
-    return listResult;
   }
 
   /// Checks the validity of a mnemonic phrase.
@@ -165,7 +155,7 @@ class AuraWalletHelper {
 
     Bip32EccCurve ecc = Bip32EccCurve();
 
-    return privateKey.length == 32 &&
+    return deCodePrivateKey.length == 32 &&
         ecc.isPrivate(Uint8List.fromList(deCodePrivateKey));
   }
 

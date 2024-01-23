@@ -82,6 +82,10 @@ class AuraWalletImpl extends AuraWallet {
     } catch (e) {
       // Handle any exceptions that might occur during the transaction submission.
 
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       if (e is GrpcError) {
         throw AuraInternalError(
             e.code, 'Submit transaction error: ${e.message}');
@@ -111,6 +115,10 @@ class AuraWalletImpl extends AuraWallet {
 
       return response.balance.amount;
     } catch (e) {
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       // Handle any exceptions that might occur while fetching the balance.
       if (e is GrpcError) {
         throw AuraInternalError(
@@ -152,6 +160,10 @@ class AuraWalletImpl extends AuraWallet {
       return listTransaction;
     } catch (e) {
       // Handle any exceptions that might occur while fetching the transaction history.
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       if (e is GrpcError) {
         throw AuraInternalError(
             e.code, 'Error fetching wallet history: ${e.message}');
@@ -185,7 +197,7 @@ class AuraWalletImpl extends AuraWallet {
         await _txServiceClient.getTxsEvent(request);
 
     List<AuraTransaction> listData =
-        AuraWalletHelper.convertToAuraTransaction(response.txResponses);
+        AuraWalletHelper.convertToAuraTransaction(response);
 
     return listData;
   }
@@ -226,6 +238,10 @@ class AuraWalletImpl extends AuraWallet {
       return String.fromCharCodes(response.data);
     } catch (e) {
       // Handle any exceptions that might occur during the query.
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       if (e is GrpcError) {
         throw AuraInternalError(e.code, 'Query failed: ${e.message}');
       }
@@ -330,6 +346,10 @@ class AuraWalletImpl extends AuraWallet {
         'Broadcast transaction error\n${response.rawLog}',
       );
     } catch (e) {
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       if (e is GrpcError) {
         throw AuraInternalError(
             e.code, 'Execute smart contract error: ${e.message}');
@@ -417,6 +437,10 @@ class AuraWalletImpl extends AuraWallet {
       return signedTx;
     } catch (e) {
       // Handle any error that occurs during transaction signing.
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       if (e is GrpcError) {
         throw AuraInternalError(e.code, 'Send transaction error: ${e.message}');
       }
@@ -476,6 +500,10 @@ class AuraWalletImpl extends AuraWallet {
       return tran['code'].toString() == successFullTransactionCode;
     } catch (e) {
       // Handle any error that occurs during verification.
+      if(e is AuraInternalError){
+        rethrow;
+      }
+
       String errorMessage =
           e is PlatformException ? '[${e.code}] ${e.message}' : e.toString();
       throw AuraInternalError(

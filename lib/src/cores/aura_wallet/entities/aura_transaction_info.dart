@@ -1,13 +1,21 @@
-class AuraTransaction {
-  final String fromAddress;
-  final String toAddress;
-  final String amount;
-  final String timestamp;
+import 'package:alan/proto/google/protobuf/any.pb.dart';
 
-  AuraTransaction(
-    this.fromAddress,
-    this.toAddress,
-    this.amount,
-    this.timestamp,
-  );
+class AuraTransaction {
+  final String txHash;
+  final int status;
+  final String timeStamp;
+  final String fee;
+  final String type;
+  final String? memo;
+  final Any ?msg;
+
+  const AuraTransaction({
+    required this.status,
+    required this.txHash,
+    required this.timeStamp,
+    required this.fee,
+    required this.type,
+    this.memo,
+    this.msg,
+  });
 }

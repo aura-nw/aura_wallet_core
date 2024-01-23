@@ -101,7 +101,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               ),
             ),
             Text(
-              auraTransaction.fromAddress,
+              'auraTransaction.fromAddress',
               style: TextStyle(color: theme.lightColor),
             )
           ],
@@ -116,7 +116,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               ),
             ),
             Text(
-              auraTransaction.toAddress,
+              'auraTransaction.toAddress',
               style: TextStyle(
                 color: theme.lightColor,
               ),
@@ -133,7 +133,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               ),
             ),
             Text(
-              auraTransaction.amount,
+              'auraTransaction.amount',
               style: TextStyle(
                 color: theme.lightColor,
               ),
@@ -147,7 +147,7 @@ class _TransactionHistoryState extends State<TransactionHistory> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             Text(
-              auraTransaction.toAddress,
+              'auraTransaction.toAddress',
               style: TextStyle(
                 color: theme.lightColor,
               ),
