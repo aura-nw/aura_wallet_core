@@ -11,7 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  walletconnect_flutter_v2: ^2.1.5
+  walletconnect_flutter_v2: ^2.1.11
+  pointycastle: ^3.7.4
+  crypto: ^3.0.3
+
+
 #  alan: ^0.41.4+1
 #    path: packages/alan.dart
   alan:

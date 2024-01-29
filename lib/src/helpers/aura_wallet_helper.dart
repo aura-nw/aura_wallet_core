@@ -8,6 +8,7 @@ import 'package:aura_wallet_core/src/cores/exceptions/error_constants.dart';
 import 'package:aura_wallet_core/src/cores/repo/store_house.dart';
 import 'package:flutter/services.dart';
 import 'package:hex/hex.dart';
+import 'package:pointycastle/ecc/curves/secp256k1.dart';
 import 'package:protobuf/protobuf.dart' as proto;
 import 'dart:developer' as Log;
 
@@ -59,7 +60,7 @@ class AuraWalletHelper {
   /// Returns:
   ///   - A list of `AuraTransaction` objects.
   static List<AuraTransaction> convertToAuraTransaction(
-      GetTxsEventResponse response,
+    GetTxsEventResponse response,
   ) {
     return response.txResponses.map((e) {
       int index = response.txResponses.indexOf(e);
@@ -204,5 +205,16 @@ class AuraWalletHelper {
         errorMessage,
       );
     }
+  }
+
+  /// This method generate pub key from private key
+  static Uint8List getPublicKeyFromPrivateKey(Uint8List privateKey) {
+    final secp256k1 = ECCurve_secp256k1();
+    final point = secp256k1.G;
+
+    final bigInt = BigInt.parse(HEX.encode(privateKey), radix: 16);
+    final curvePoint = point * bigInt;
+
+    return curvePoint!.getEncoded();
   }
 }
