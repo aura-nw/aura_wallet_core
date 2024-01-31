@@ -6,17 +6,23 @@ import 'package:aura_wallet_core/src/wallet_connect/aura_wallet_connect_helper.d
 
 class AuraCoreHelper {
   static Map<String, dynamic> signAmino(
-      {required Map<String, dynamic> signDoc, required String privateKeyHex}) {
+      {required Map<String, dynamic> signDoc,
+      required String privateKeyHex,
+      required String pubKeyHex}) {
+    // Generate Signdoc object
     StdSignDoc stdSignDoc = StdSignDoc.fromJson(signDoc);
+
+    // Generate signature
     String signatureBase64 = AuraWalletConnectHelper.createSignatureFromSignDoc(
         signDoc: stdSignDoc, privateKeyHex: privateKeyHex);
+
+    // Generate public key
     Uint8List privateKey =
         AuraWalletHelper.getPrivateKeyFromString(privateKeyHex);
 
-    Uint8List publicKeyHex =
-        AuraWalletHelper.getPublicKeyFromPrivateKey(privateKey);
+    // Make response
     Map<String, dynamic> response = AuraWalletConnectHelper.makeReslt(
-        stdSignDoc, signatureBase64, publicKeyHex);
+        stdSignDoc, signatureBase64, pubKeyHex);
 
     return response;
   }

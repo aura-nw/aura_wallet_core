@@ -121,7 +121,7 @@ class AuraWalletConnectHelper {
   }
 
   static Map<String, dynamic> makeReslt(
-      StdSignDoc signDoc, String signatureBase64, Uint8List publicKeyHex) {
+      StdSignDoc signDoc, String signatureBase64, String publicKeyHex) {
     print('signDoc.msg: ${signDoc.msgs}');
     // Map<String, dynamic> listMsg = jsonDecode(signDoc.msgs.toString());
 
@@ -149,7 +149,7 @@ class AuraWalletConnectHelper {
       'signature': {
         'pub_key': {
           'type': 'tendermint/PubKeySecp256k1',
-          'value': HEX.encode(publicKeyHex),
+          'value': publicKeyHex,
         },
         'signature': signatureBase64,
       }

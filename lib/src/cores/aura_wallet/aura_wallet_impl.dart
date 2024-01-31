@@ -18,6 +18,7 @@ import 'package:alan/proto/cosmos/bank/v1beta1/export.dart' as bank;
 import 'package:alan/proto/cosmwasm/wasm/v1/export.dart' as cosMWasm;
 import 'package:alan/proto/cosmos/tx/v1beta1/export.dart' as auraTx;
 import 'package:grpc/grpc.dart';
+import 'package:hex/hex.dart';
 
 class AuraWalletImpl extends AuraWallet {
   final HttpClient _httpClient = HttpClient();
@@ -82,7 +83,7 @@ class AuraWalletImpl extends AuraWallet {
     } catch (e) {
       // Handle any exceptions that might occur during the transaction submission.
 
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -115,7 +116,7 @@ class AuraWalletImpl extends AuraWallet {
 
       return response.balance.amount;
     } catch (e) {
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -160,7 +161,7 @@ class AuraWalletImpl extends AuraWallet {
       return listTransaction;
     } catch (e) {
       // Handle any exceptions that might occur while fetching the transaction history.
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -238,7 +239,7 @@ class AuraWalletImpl extends AuraWallet {
       return String.fromCharCodes(response.data);
     } catch (e) {
       // Handle any exceptions that might occur during the query.
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -274,18 +275,26 @@ class AuraWalletImpl extends AuraWallet {
     String denom = storehouse.configService.deNom;
 
     // Load the wallet passphrase.
-    String? passPhrase =
+    String? privateKeyOrPassPhrase =
         await storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
     // Check if the passphrase is null.
-    if (passPhrase == null) {
+    if (privateKeyOrPassPhrase == null) {
       throw AuraInternalError(
           ErrorCode.PassphraseNotFound, 'Passphrase not found');
     }
 
-    // Derive the wallet from the passphrase.
-    final wallet = Wallet.derive(
-        passPhrase.split(' '), storehouse.configService.networkInfo);
+    final Wallet wallet;
+    if (AuraWalletHelper.checkPrivateKey(privateKeyOrPassPhrase)) {
+      wallet = Wallet.import(
+        storehouse.configService.networkInfo,
+        Uint8List.fromList(HEX.decode(privateKeyOrPassPhrase)),
+      );
+    } else {
+      // Derive the wallet from the passphrase.
+      wallet = Wallet.derive(privateKeyOrPassPhrase.split(' '),
+          storehouse.configService.networkInfo);
+    }
 
     // Create the message.
     final List<int> msg = jsonEncode(executeMessage).codeUnits;
@@ -346,7 +355,7 @@ class AuraWalletImpl extends AuraWallet {
         'Broadcast transaction error\n${response.rawLog}',
       );
     } catch (e) {
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -414,15 +423,24 @@ class AuraWalletImpl extends AuraWallet {
 
     final NetworkInfo networkInfo = storehouse.configService.networkInfo;
 
-    String? passPhrase =
+    String? privateKeyOrPassPhrase =
         await storehouse.storage.getWalletPassPhrase(walletName: walletName);
 
-    if (passPhrase == null) {
+    if (privateKeyOrPassPhrase == null) {
       // Handle the case where the passphrase is null and throw an AuraInternalError.
       throw AuraInternalError(ErrorCode.NullPassphrase, "Passphrase is null");
     }
-    final wallet = Wallet.derive(
-        passPhrase.split(' '), storehouse.configService.networkInfo);
+    final Wallet wallet;
+    if (AuraWalletHelper.checkPrivateKey(privateKeyOrPassPhrase)) {
+      wallet = Wallet.import(
+        storehouse.configService.networkInfo,
+        Uint8List.fromList(HEX.decode(privateKeyOrPassPhrase)),
+      );
+    } else {
+      // Derive the wallet from the passphrase.
+      wallet = Wallet.derive(privateKeyOrPassPhrase.split(' '),
+          storehouse.configService.networkInfo);
+    }
 
     try {
       // Sign the transaction.
@@ -437,7 +455,7 @@ class AuraWalletImpl extends AuraWallet {
       return signedTx;
     } catch (e) {
       // Handle any error that occurs during transaction signing.
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
@@ -500,7 +518,7 @@ class AuraWalletImpl extends AuraWallet {
       return tran['code'].toString() == successFullTransactionCode;
     } catch (e) {
       // Handle any error that occurs during verification.
-      if(e is AuraInternalError){
+      if (e is AuraInternalError) {
         rethrow;
       }
 
