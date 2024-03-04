@@ -21,7 +21,7 @@ packages:
     dependency: transitive
     description:
       path: "."
-      ref: HEAD
+      ref: main
       resolved-ref: "414bdbfacda0c871c9ff4248bd1010fb0ad6bcf2"
       url: "https://github.com/alan-sdk/alan.dart.git"
     source: git
@@ -613,10 +613,10 @@ packages:
     dependency: transitive
     description:
       name: pointycastle
-      sha256: "7c1e5f0d23c9016c5bbd8b1473d0d3fb3fc851b876046039509e18e0c7485f2c"
+      sha256: "43ac87de6e10afabc85c445745a7b799e04de84cebaa4fd7bf55a5e1e9604d29"
       url: "https://pub.dev"
     source: hosted
-    version: "3.7.3"
+    version: "3.7.4"
   protobuf:
     dependency: transitive
     description:
@@ -834,10 +834,10 @@ packages:
     dependency: transitive
     description:
       name: walletconnect_flutter_v2
-      sha256: c08b229a16f153e9bded310c4ee35f7240a39c9ff6742f9e0414b0433f27aa50
+      sha256: "60f56018f69401799dfcfdee2d5112132aa922eea613018155132b87849ea1b5"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.10"
+    version: "2.1.11"
   watcher:
     dependency: transitive
     description:

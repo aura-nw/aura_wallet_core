@@ -21,6 +21,8 @@ export 'src/aura_core_helper.dart';
 /// including generating random HD wallets, restoring wallets from passphrases,
 /// loading stored wallets, and removing wallets from storage.
 abstract class AuraWalletCore {
+  // static const WalletService walletService = WalletService();
+
   /// Factory constructor for creating an instance of [AuraWalletCore].
   factory AuraWalletCore.create({
     required AuraEnvironment environment,

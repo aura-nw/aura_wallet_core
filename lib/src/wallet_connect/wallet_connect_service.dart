@@ -107,8 +107,12 @@ class WalletConnectService {
   }
 
   Future connect({required Uri uri}) async {
+    print('#2 WalletConnectService connect $uri');
     return _web3Wallet?.pair(uri: uri);
   }
+
+  List<PairingInfo> get pairingsList => _web3Wallet!.pairings.getAll();
+  List<SessionData> get sessionsList => _web3Wallet!.sessions.getAll();
 
   void approveConnection({required int sessionId, required String account}) {
     _web3Wallet?.approveSession(id: sessionId, namespaces: {
@@ -259,5 +263,14 @@ class WalletConnectService {
   void _onAuthRequest(AuthRequest? args) async {
     print('#PyxisDebug _onAuthRequest $args');
     onAuthRequest?.call(args);
+  }
+
+  Future disconnectSession(SessionData sessionData) async {
+    await _web3Wallet?.disconnectSession(
+        topic: sessionData.topic,
+        reason: Errors.getSdkError(
+          Errors.USER_DISCONNECTED,
+        ));
+    return;
   }
 }
